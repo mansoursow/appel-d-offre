@@ -173,7 +173,7 @@ DOC_ALERT_DAYS_BEFORE_DEADLINE = int(os.environ.get("DOC_ALERT_DAYS_BEFORE_DEADL
 # donc l'autoriser explicitement. En production, quand le backend sert lui-meme
 # le frontend compile, tout part de la meme origine et CORS ne sert plus a
 # rien : laisser la valeur par defaut suffit. Pour autoriser un domaine tiers,
-# renseigner CORS_ORIGINS="https://veille.adoc-consulting.com" (plusieurs
+# renseigner CORS_ORIGINS="https://app.adoc-consulting.com" (plusieurs
 # origines separees par des virgules).
 CORS_ORIGINS = [
     o.strip()

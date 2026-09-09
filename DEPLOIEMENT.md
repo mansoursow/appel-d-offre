@@ -5,7 +5,7 @@ l'interface React compilée. Une seule adresse pour les utilisateurs, pas de
 configuration CORS, pas de second hébergement.
 
 ```
-navigateur ──► https://veille.adoc-consulting.com
+navigateur ──► https://app.adoc-consulting.com
                    │
                    ├── /            → interface React (frontend/dist)
                    └── /api/...     → API FastAPI + base SQLite
@@ -67,12 +67,30 @@ Railway fournit `PORT` automatiquement ; le conteneur l'utilise déjà.
 ## 4. Brancher le sous-domaine ADOC
 
 1. Dans le service : *Settings* → *Networking* → *Custom Domain* → ajouter
-   `veille.adoc-consulting.com`. Railway affiche une cible en
-   `xxx.up.railway.app`.
-2. Dans le DNS Hostinger de `adoc-consulting.com`, ajouter un **CNAME** :
-   nom `veille`, valeur = la cible fournie.
-3. Le certificat HTTPS est émis automatiquement une fois le DNS propagé
+   `app.adoc-consulting.com`. Railway affiche alors les deux enregistrements
+   à créer (une cible en `xxx.up.railway.app` et un jeton de vérification).
+
+2. **Vérifier d'abord qu'aucun sous-domaine d'hébergement `app` n'existe**
+   dans hPanel (*Domaines* → *Sous-domaines*). Un sous-domaine d'hébergement
+   pose des enregistrements A et AAAA, or un CNAME ne peut pas coexister avec
+   un A/AAAA portant le même nom : le domaine resterait « unverified » côté
+   Railway. Si un tel sous-domaine existe, le supprimer — l'application ne
+   tourne pas sur l'hébergement mutualisé mais sur Railway.
+
+3. Dans la zone DNS de `adoc-consulting.com`, ajouter les deux
+   enregistrements donnés par Railway :
+
+   | Type | Nom | Valeur | TTL |
+   |---|---|---|---|
+   | CNAME | `app` | `83j8yp3s.up.railway.app` | 300 |
+   | TXT | `_railway-verify.app` | `railway-verify=...` (jeton affiché par Railway) | 300 |
+
+4. Le certificat HTTPS est émis automatiquement une fois le DNS propagé
    (quelques minutes à quelques heures).
+
+> La zone DNS de `adoc-consulting.com` est gérée par le compte Hostinger
+> client 1018399772 (`u885111975`), distinct de celui qui héberge les autres
+> domaines du cabinet. Les modifications DNS se font depuis ce compte.
 
 ## 5. Premier démarrage : les comptes
 
