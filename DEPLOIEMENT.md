@@ -39,16 +39,22 @@ navigateur ──► https://app.adoc-consulting.com
 | Healthcheck Path | `/api/health` | *Settings* → *Deploy* |
 | Restart Policy | On Failure, 10 essais | *Settings* → *Deploy* |
 | Replicas | **1** | *Settings* → *Scale* |
-| Port du domaine public | **8000** | *Settings* → *Networking*, sous le domaine |
+| Port du domaine public | celui proposé par Railway (8080) | *Settings* → *Networking*, sous le domaine |
 
 Le nombre de replicas doit rester à 1 : un volume ne s'attache qu'à un seul
 exemplaire, et deux instances écrivant sur la même base SQLite la
 corrompraient.
 
-Le port compte : le conteneur écoute sur `${PORT:-8000}`. Si le domaine
-public pointe vers un autre port (8080 par défaut dans l'interface) sans que
-la variable `PORT` correspondante soit définie, Railway route vers le vide et
-le service répond « Application not found ».
+Le port n'est pas à toucher : Railway injecte une variable `PORT` dans le
+conteneur et route le domaine public vers ce même port. Le `Dockerfile`
+démarre uvicorn sur `${PORT:-8000}`, donc il suit automatiquement la valeur
+imposée par Railway (8080 en pratique) et retombe sur 8000 en local, où
+aucune variable `PORT` n'est définie. Rien à aligner à la main.
+
+À noter : interroger directement la cible `xxxxxx.up.railway.app` du CNAME
+renvoie `Application not found`. C'est normal et ce n'est pas un symptôme de
+panne — cette adresse ne se route que par l'en-tête `Host` du domaine
+personnalisé.
 
 ## 2. Créer le volume persistant — étape à ne pas sauter
 
