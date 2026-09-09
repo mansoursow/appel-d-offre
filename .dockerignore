@@ -1,0 +1,15 @@
+# Tout ce qui ne doit pas entrer dans l'image (poids, secrets, donnees).
+**/venv/
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/*.pyc
+app/frontend/dist/
+app/backend/uploads/
+app/backend/.secret_key
+**/*.db
+**/*.sqlite3
+.env
+.env.*
+.git/
+*.xlsx

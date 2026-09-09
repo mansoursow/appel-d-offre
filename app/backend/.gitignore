@@ -1,0 +1,12 @@
+# Clé de signature des sessions : générée au premier démarrage, propre à
+# chaque installation. Ne doit jamais être publiée.
+.secret_key
+
+# Fichiers déposés par les utilisateurs (photos de journaux, offres).
+uploads/
+
+# Base de données locale
+tenders.db
+
+__pycache__/
+*.pyc

@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Environnements et dependances (reinstallables : jamais versionnes)
+# ---------------------------------------------------------------------------
+app/backend/venv/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+node_modules/
+
+# ---------------------------------------------------------------------------
+# Build du frontend (regenere par `npm run build`)
+# ---------------------------------------------------------------------------
+app/frontend/dist/
+
+# ---------------------------------------------------------------------------
+# DONNEES ET SECRETS -- ne doivent JAMAIS partir sur GitHub
+# ---------------------------------------------------------------------------
+# Base SQLite : contient les comptes, les mots de passe haches et l'activite
+# du cabinet. La base de production vit sur le serveur, pas dans le depot.
+*.db
+*.db-journal
+*.sqlite3
+
+# Cle de signature des jetons de session (generee au 1er demarrage).
+.secret_key
+
+# Fichiers envoyes par les utilisateurs (photos de journaux, offres deposees).
+app/backend/uploads/
+
+# Variables d'environnement reelles (seuls les .env.example sont versionnes).
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Divers
+# ---------------------------------------------------------------------------
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
