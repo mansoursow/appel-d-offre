@@ -19,11 +19,36 @@ navigateur ──► https://app.adoc-consulting.com
 
 1. Sur [railway.app](https://railway.app) : *New Project* → *Deploy from
    GitHub repo* → choisir `mansoursow/appel-d-offre`.
-2. Railway lit `railway.json`, détecte le `Dockerfile` et lance le premier
-   build (compilation React puis installation du backend, ~3 min).
+2. Railway détecte le `Dockerfile` tout seul et lance le premier build
+   (compilation React puis installation du backend, ~3 min).
 3. **Ne pas ouvrir le service au public tout de suite** : créer d'abord le
    volume (étape 2), sinon la base créée au premier démarrage vivra sur un
    disque éphémère.
+
+> **Pas de fichier de configuration.** Railway a déprécié le « Config as
+> Code » : les services créés après le 2026-08-28 ne peuvent plus l'activer,
+> et un `railway.json` déposé dans le dépôt serait purement ignoré. Tous les
+> réglages ci-dessous se font donc dans l'interface, onglet *Settings* du
+> service.
+
+### Réglages à poser dans l'interface
+
+| Réglage | Valeur | Où |
+|---|---|---|
+| Builder | Dockerfile | *Settings* → *Build* (détecté automatiquement) |
+| Healthcheck Path | `/api/health` | *Settings* → *Deploy* |
+| Restart Policy | On Failure, 10 essais | *Settings* → *Deploy* |
+| Replicas | **1** | *Settings* → *Scale* |
+| Port du domaine public | **8000** | *Settings* → *Networking*, sous le domaine |
+
+Le nombre de replicas doit rester à 1 : un volume ne s'attache qu'à un seul
+exemplaire, et deux instances écrivant sur la même base SQLite la
+corrompraient.
+
+Le port compte : le conteneur écoute sur `${PORT:-8000}`. Si le domaine
+public pointe vers un autre port (8080 par défaut dans l'interface) sans que
+la variable `PORT` correspondante soit définie, Railway route vers le vide et
+le service répond « Application not found ».
 
 ## 2. Créer le volume persistant — étape à ne pas sauter
 
