@@ -1,59 +1,93 @@
-# Mise en production
+# Mise en production (Railway)
 
 L'application se déploie comme **un seul service** : l'API FastAPI sert aussi
 l'interface React compilée. Une seule adresse pour les utilisateurs, pas de
-configuration CORS, pas de second hébergement à payer.
+configuration CORS, pas de second hébergement.
 
 ```
 navigateur ──► https://veille.adoc-consulting.com
                    │
                    ├── /            → interface React (frontend/dist)
                    └── /api/...     → API FastAPI + base SQLite
+                                        │
+                                        └── /var/data (volume persistant)
 ```
 
 ---
 
-## 1. Déployer sur Render
+## 1. Créer le service sur Railway
 
-1. **Créer le service.** Sur [render.com](https://render.com) : *New* →
-   *Web Service* → connecter le dépôt GitHub. Render détecte `render.yaml` et
-   propose la configuration toute faite (Docker, disque persistant, variables).
-2. **Vérifier le plan.** Le fichier demande le plan **Starter (~7 $/mois)**.
-   Ce n'est pas un confort : c'est le premier plan qui donne droit à un
-   **disque persistant**. Sur le plan gratuit, le disque est effacé à chaque
-   redéploiement — comptes, mots de passe, historique de connexions, journaux
-   et offres déposées seraient perdus à chaque mise à jour du code.
-3. **Déployer.** Le premier build compile le frontend puis installe le
-   backend (~3 min). Render vérifie ensuite `/api/health`.
+1. Sur [railway.app](https://railway.app) : *New Project* → *Deploy from
+   GitHub repo* → choisir `mansoursow/appel-d-offre`.
+2. Railway lit `railway.json`, détecte le `Dockerfile` et lance le premier
+   build (compilation React puis installation du backend, ~3 min).
+3. **Ne pas ouvrir le service au public tout de suite** : créer d'abord le
+   volume (étape 2), sinon la base créée au premier démarrage vivra sur un
+   disque éphémère.
 
-Aucune variable n'est à saisir à la main : `render.yaml` génère `SECRET_KEY`
-et place la base, les fichiers déposés et la clé de session sur le disque
-persistant monté dans `/var/data`.
+## 2. Créer le volume persistant — étape à ne pas sauter
 
-## 2. Brancher le sous-domaine ADOC
+Dans le service : *Settings* → *Volumes* → *New Volume*, avec le point de
+montage exact :
 
-1. Dans Render : *Settings* → *Custom Domain* → ajouter
-   `veille.adoc-consulting.com`. Render affiche une cible du type
-   `xxx.onrender.com`.
-2. Dans le DNS Hostinger du domaine `adoc-consulting.com`, ajouter un
-   enregistrement **CNAME** : nom `veille`, valeur = la cible fournie.
-3. Le certificat HTTPS est émis automatiquement par Render une fois le DNS
-   propagé (quelques minutes à quelques heures).
+```
+/var/data
+```
 
-## 3. Premier démarrage : les comptes
+Sans ce volume, Railway repart d'un système de fichiers vide à chaque
+redéploiement : **comptes, mots de passe, historique de connexions, journaux
+de presse et offres déposées seraient perdus à chaque mise à jour du code.**
 
-Au tout premier lancement sur une base vide, cinq comptes sont créés
-automatiquement avec des **mots de passe temporaires** (`admin` / `admin123`,
+Le `Dockerfile` pointe déjà la base, les fichiers déposés et la clé de session
+vers ce dossier :
+
+| Donnée | Chemin |
+|---|---|
+| Base SQLite | `/var/data/tenders.db` |
+| Fichiers déposés | `/var/data/uploads` |
+| Clé de signature des sessions | `/var/data/.secret_key` |
+
+Un volume impose un seul exemplaire du service : `railway.json` fixe donc
+`numReplicas: 1`. Ne pas l'augmenter — deux instances écrivant sur la même
+base SQLite la corrompraient.
+
+## 3. Variables d'environnement
+
+Aucune n'est indispensable : le `Dockerfile` fournit les valeurs par défaut,
+et la clé de signature est générée au premier démarrage puis conservée sur le
+volume. Deux réglages restent recommandés (*Variables* dans le service) :
+
+| Variable | Valeur | Pourquoi |
+|---|---|---|
+| `SECRET_KEY` | une chaîne aléatoire longue | Clé maîtrisée, indépendante du volume. La générer avec `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Si elle change, tout le monde est déconnecté. |
+| `TOKEN_TTL_SECONDS` | `43200` | Durée d'une session (12 h). |
+
+Railway fournit `PORT` automatiquement ; le conteneur l'utilise déjà.
+
+## 4. Brancher le sous-domaine ADOC
+
+1. Dans le service : *Settings* → *Networking* → *Custom Domain* → ajouter
+   `veille.adoc-consulting.com`. Railway affiche une cible en
+   `xxx.up.railway.app`.
+2. Dans le DNS Hostinger de `adoc-consulting.com`, ajouter un **CNAME** :
+   nom `veille`, valeur = la cible fournie.
+3. Le certificat HTTPS est émis automatiquement une fois le DNS propagé
+   (quelques minutes à quelques heures).
+
+## 5. Premier démarrage : les comptes
+
+Au tout premier lancement sur une base vide, cinq comptes sont créés avec des
+**mots de passe temporaires** (`admin` / `admin123`,
 `assistante` / `assistante123`, `selection` / `selection123`,
 `superviseur` / `superviseur123`, `montage` / `montage123`).
 
 Chacun est marqué « doit changer son mot de passe » : à la première connexion,
-l'application impose le changement avant tout accès. **Connectez-vous en
-`admin` en premier** et changez le mot de passe avant de distribuer les accès
-aux autres. L'administrateur peut ensuite créer, renommer ou désactiver des
-comptes depuis l'écran *Administration*.
+l'application impose le changement avant tout accès. **Se connecter en `admin`
+en premier** et changer le mot de passe avant de distribuer les accès.
+L'administrateur peut ensuite créer, renommer ou désactiver des comptes depuis
+l'écran *Administration*.
 
-## 4. Ce qui est enregistré
+## 6. Ce qui est enregistré
 
 Tout est en base, rien n'est perdu au redémarrage :
 
@@ -65,26 +99,25 @@ Tout est en base, rien n'est perdu au redémarrage :
 | Changements de mot de passe, avis retenus/écartés, dépôts de fichiers, collectes | table `activity_logs` | admin |
 | Photos de journaux, offres technique et financière | `/var/data/uploads` | selon le rôle |
 
-Les sessions durent 12 heures (`TOKEN_TTL_SECONDS`), puis la reconnexion est
-demandée.
+Les sessions durent 12 heures, puis la reconnexion est demandée.
 
-## 5. Sauvegardes
+## 7. Sauvegardes
 
-Render sauvegarde le disque, mais une copie hors hébergeur reste prudente.
-Depuis le *Shell* du service :
+Railway propose des sauvegardes de volume, mais une copie hors hébergeur reste
+prudente. Avec le [CLI Railway](https://docs.railway.com/guides/cli) :
 
 ```bash
-sqlite3 /var/data/tenders.db ".backup '/tmp/sauvegarde.db'"
+railway ssh "sqlite3 /var/data/tenders.db \".backup '/tmp/sauvegarde.db'\""
 ```
 
-puis récupérer le fichier. À faire au moins une fois par mois, ou avant toute
+puis récupérer le fichier. À faire au moins une fois par mois, et avant toute
 mise à jour importante.
 
-## 6. Mettre à jour l'application
+## 8. Mettre à jour l'application
 
-`autoDeploy` est activé : un `git push` sur la branche principale redéclenche
-le build et le déploiement. La base et les fichiers déposés, qui vivent sur le
-disque persistant, ne sont pas touchés.
+Railway redéploie automatiquement à chaque `git push` sur la branche
+principale. La base et les fichiers déposés vivent sur le volume : ils ne sont
+pas touchés par un redéploiement.
 
 ---
 

@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/backend/app ./app
 COPY --from=frontend /build/dist ./frontend_dist
 
-# /var/data est le point de montage du disque PERSISTANT : la base SQLite, les
+# /var/data est le point de montage du VOLUME PERSISTANT : la base SQLite, les
 # fichiers deposes et la cle de session y survivent aux redeploiements.
 RUN mkdir -p /var/data
 

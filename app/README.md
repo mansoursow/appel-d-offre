@@ -73,6 +73,13 @@ prêtes à recevoir un scraper réel dès qu'une solution adaptée (ex. rendu
 JavaScript via navigateur headless, accès API authentifié) sera mise en
 place. Voir "Ajouter une nouvelle source" ci-dessous.
 
+## Mise en production
+
+Le déploiement (Railway, volume persistant, sous-domaine, comptes de départ et
+sauvegardes) est décrit dans [DEPLOIEMENT.md](../DEPLOIEMENT.md) à la racine du
+dépôt. En production, l'API sert elle-même l'interface compilée : un seul
+service et une seule adresse.
+
 ## Lancer le backend
 
 ```bash
