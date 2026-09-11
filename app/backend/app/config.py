@@ -161,6 +161,10 @@ JOURNAL_WORKING_DAYS = [
     int(d) for d in os.environ.get("JOURNAL_WORKING_DAYS", "0,1,2,3,4,5").split(",") if d.strip() != ""
 ]
 
+# Date de mise en service du suivi des journaux (AAAA-MM-JJ). Les journees
+# anterieures ne sont ni affichees ni comptees comme manquantes.
+JOURNAL_START_DATE = os.environ.get("JOURNAL_START_DATE", "2026-09-10")
+
 # Nombre de jours avant la date limite a partir duquel un dossier incomplet
 # (offre technique ou financiere manquante) est signale comme urgent a l'admin.
 DOC_ALERT_DAYS_BEFORE_DEADLINE = int(os.environ.get("DOC_ALERT_DAYS_BEFORE_DEADLINE", 3))

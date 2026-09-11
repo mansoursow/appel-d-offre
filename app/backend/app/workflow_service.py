@@ -168,6 +168,9 @@ def build_journal_compliance(
     """
     today = today or date.today()
     start = today - timedelta(days=days - 1)
+    if config.JOURNAL_START_DATE:
+        start = max(start, date.fromisoformat(config.JOURNAL_START_DATE))
+    days = max((today - start).days + 1, 0)
 
     query = db.query(JournalEntry).filter(
         JournalEntry.entry_date >= start.isoformat(),
