@@ -252,6 +252,15 @@ def build_alerts(db: Session, *, days: int = 30, today: Optional[date] = None) -
     today = today or date.today()
     alerts: list[AlertOut] = []
 
+    if not config.PERSISTENT_STORAGE:
+        alerts.append(AlertOut(
+            kind="stockage_non_persistant",
+            severity="critique",
+            title="Stockage non permanent — données effacées à chaque mise à jour",
+            detail="Aucun volume Railway n'est attaché sur /var/data : comptes, mots de passe, "
+                   "journaux et offres déposées seront perdus au prochain redéploiement.",
+        ))
+
     compliance = build_journal_compliance(db, days=days, today=today)
     for day in compliance.days:
         if day.is_missing:

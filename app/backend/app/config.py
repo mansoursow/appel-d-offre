@@ -151,6 +151,12 @@ UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(_BACKEND_DIR, "uploads"))
 SECRET_KEY_FILE = os.environ.get("SECRET_KEY_FILE", os.path.join(_BACKEND_DIR, ".secret_key"))
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 
+# Railway expose RAILWAY_VOLUME_MOUNT_PATH quand un volume est attache au
+# service. Sans volume, la base, les fichiers et la cle de session vivent dans
+# le conteneur et sont effaces a chaque redeploiement : on le signale.
+ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+PERSISTENT_STORAGE = not ON_RAILWAY or bool(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH"))
+
 # Duree de validite d'une session (par defaut 12 heures).
 TOKEN_TTL_SECONDS = int(os.environ.get("TOKEN_TTL_SECONDS", 12 * 3600))
 

@@ -220,7 +220,7 @@ class ActivityLogOut(BaseModel):
 
 
 class AlertOut(BaseModel):
-    kind: str            # journal_manquant | dossier_incomplet
+    kind: str            # journal_manquant | dossier_incomplet | stockage_non_persistant
     severity: str        # critique | urgent | info
     title: str
     detail: str

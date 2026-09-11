@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from datetime import date
 from typing import Optional
@@ -34,6 +35,12 @@ with SessionLocal() as _session:
 # Dossier de stockage des fichiers envoyes (photos de journaux, offres).
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 
+if not config.PERSISTENT_STORAGE:
+    logging.getLogger("uvicorn.error").critical(
+        "AUCUN VOLUME PERSISTANT sur Railway : la base et les fichiers seront "
+        "effaces au prochain redeploiement. Attacher un volume sur /var/data."
+    )
+
 app = FastAPI(title="Veille Appels d'Offres - Senegal & UEMOA", version="0.2.0")
 
 # En production le frontend compile est servi par cette meme application
@@ -58,7 +65,7 @@ app.include_router(admin_router.router)
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "stockage_persistant": config.PERSISTENT_STORAGE}
 
 
 @app.get("/api/config")
