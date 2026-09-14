@@ -27,14 +27,28 @@ const ACTION_LABELS = {
   collecte_veille: 'Collecte de la veille',
   creation_compte: 'Compte créé',
   modification_compte: 'Compte modifié',
+  notification_envoyee: 'E-mail envoyé',
+  notification_echec: "Échec d'envoi d'e-mail",
+  notification_non_envoyee: 'E-mail non envoyé (adresse manquante)',
 }
 
 const SUB_TABS = [
   { key: 'alertes', label: 'Alertes' },
   { key: 'journaux', label: 'Suivi des journaux' },
   { key: 'activite', label: "Journal d'activité" },
+  { key: 'sources', label: 'Sources de la veille' },
   { key: 'comptes', label: 'Comptes' },
 ]
+
+const ZONE_LABELS = { senegal: 'Sénégal', uemoa: 'UEMOA', international: 'International' }
+
+const HEALTH = {
+  ok: { label: 'Remonte des avis', className: 'badge-retenu' },
+  vide: { label: 'Aucun avis trouvé', className: 'badge-warning' },
+  erreur: { label: 'En erreur', className: 'badge-expired' },
+  jamais: { label: 'Jamais collecté', className: 'badge-outline' },
+  sans_scraper: { label: 'Non branché', className: 'badge-rejete' },
+}
 
 export default function AdminPage({ dashboard, onChanged }) {
   const [sub, setSub] = useState('alertes')
@@ -94,6 +108,7 @@ export default function AdminPage({ dashboard, onChanged }) {
       {sub === 'alertes' && <AlertsPanel alerts={dashboard?.alerts || []} />}
       {sub === 'journaux' && <CompliancePanel />}
       {sub === 'activite' && <LogsPanel />}
+      {sub === 'sources' && <SourcesPanel />}
       {sub === 'comptes' && <UsersPanel onChanged={onChanged} />}
     </div>
   )
@@ -300,17 +315,216 @@ function LogsPanel() {
 }
 
 // --------------------------------------------------------------------------
+function SourcesPanel() {
+  const [sources, setSources] = useState([])
+  const [error, setError] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [running, setRunning] = useState(null)
+  const [problemsOnly, setProblemsOnly] = useState(false)
+
+  const load = useCallback(() => {
+    api.fetchAdminSources().then(setSources).catch((e) => setError(e.message))
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function relaunch(source) {
+    setRunning(source.id)
+    setError(null)
+    setMessage(null)
+    try {
+      const summary = await api.refresh(source.id)
+      const result = summary.results[0]
+      if (result?.status === 'error') {
+        setError(`${source.name} : ${result.error}`)
+      } else {
+        setMessage(
+          `${source.name} : ${result?.total_found ?? 0} avis trouvé(s), dont ${result?.new_items ?? 0} nouveau(x).`,
+        )
+      }
+      load()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setRunning(null)
+    }
+  }
+
+  const withItems = sources.filter((s) => s.tender_count > 0).length
+  const problems = sources.filter((s) => s.health !== 'ok')
+  const totalItems = sources.reduce((sum, s) => sum + s.tender_count, 0)
+  const visible = problemsOnly ? problems : sources
+
+  return (
+    <section className="card card-pad">
+      <div className="section-title">
+        <div>
+          <h2>Sources de la veille</h2>
+          <p>
+            Tous les sites interrogés : combien d'avis on en a récupéré et le résultat de la
+            dernière collecte, pour repérer ceux qui ne remontent plus rien.
+          </p>
+        </div>
+        <label className="row" style={{ gap: 6 }}>
+          <input type="checkbox" checked={problemsOnly} onChange={(e) => setProblemsOnly(e.target.checked)} />
+          Uniquement les sources à vérifier
+        </label>
+      </div>
+
+      <div className="stat-grid" style={{ marginBottom: 16 }}>
+        <div className="stat">
+          <div className="stat-value">{sources.length}</div>
+          <div className="stat-label">sources suivies</div>
+        </div>
+        <div className="stat stat-ok">
+          <div className="stat-value">{withItems}</div>
+          <div className="stat-label">avec des avis récupérés</div>
+        </div>
+        <div className={`stat${problems.length ? ' stat-alert' : ' stat-ok'}`}>
+          <div className="stat-value">{problems.length}</div>
+          <div className="stat-label">à vérifier</div>
+        </div>
+        <div className="stat">
+          <div className="stat-value">{totalItems}</div>
+          <div className="stat-label">avis en base</div>
+        </div>
+      </div>
+
+      {error && <div className="banner banner-error">{error}</div>}
+      {message && <div className="banner banner-success">{message}</div>}
+
+      <div className="table-wrap">
+        <table className="data">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Zone</th>
+              <th>Avis en base</th>
+              <th>Liés à l'activité</th>
+              <th>En cours</th>
+              <th>Dernière collecte</th>
+              <th>État</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((source) => {
+              const health = HEALTH[source.health] || HEALTH.jamais
+              return (
+                <tr key={source.id}>
+                  <td>
+                    <strong>{source.name}</strong>
+                    <div>
+                      <a href={source.url} target="_blank" rel="noreferrer" className="muted">
+                        {source.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                      </a>
+                    </div>
+                  </td>
+                  <td>{ZONE_LABELS[source.zone] || source.zone}</td>
+                  <td><strong>{source.tender_count}</strong></td>
+                  <td>{source.relevant_count}</td>
+                  <td>{source.open_count}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {source.last_run_at ? (
+                      <>
+                        {formatDateTime(source.last_run_at)}
+                        {source.last_status === 'ok' && (
+                          <div className="muted">
+                            {source.last_total_found} trouvé(s), {source.last_new_items} nouveau(x)
+                          </div>
+                        )}
+                      </>
+                    ) : source.last_item_at ? (
+                      <span className="muted">avis mis à jour le {formatDateTime(source.last_item_at)}</span>
+                    ) : '—'}
+                  </td>
+                  <td>
+                    <span className={`badge ${health.className}`}>{health.label}</span>
+                    {source.health === 'erreur' && source.last_error && (
+                      <div className="muted" style={{ maxWidth: 260, marginTop: 4 }} title={source.last_error}>
+                        {source.last_error.length > 120 ? `${source.last_error.slice(0, 120)}…` : source.last_error}
+                      </div>
+                    )}
+                    {source.health === 'vide' && source.last_success_at && (
+                      <div className="muted" style={{ marginTop: 4 }}>
+                        dernier avis trouvé le {formatDate(source.last_success_at)}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {source.has_scraper && (
+                      <button
+                        className="btn btn-sm btn-outline"
+                        disabled={running !== null}
+                        onClick={() => relaunch(source)}
+                      >
+                        {running === source.id ? 'Collecte…' : 'Relancer'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+            {visible.length === 0 && (
+              <tr><td colSpan={8} className="muted">Aucune source à vérifier.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+// --------------------------------------------------------------------------
 function UsersPanel({ onChanged }) {
   const [users, setUsers] = useState([])
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(null)
   const [creating, setCreating] = useState(false)
+  const [emailEnabled, setEmailEnabled] = useState(null)
+  const [testing, setTesting] = useState(false)
 
   const load = useCallback(() => {
     api.fetchUsers().then(setUsers).catch((e) => setError(e.message))
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    api.fetchConfig().then((c) => setEmailEnabled(Boolean(c.email_enabled))).catch(() => setEmailEnabled(null))
+  }, [])
+
+  async function editEmail(user) {
+    const value = window.prompt(
+      `Adresse e-mail de ${user.username} (laisser vide pour la retirer) :`,
+      user.email || '',
+    )
+    if (value === null) return
+    setError(null)
+    try {
+      await api.updateUser(user.id, { email: value.trim() })
+      setMessage(`Adresse e-mail de ${user.username} mise à jour.`)
+      load()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  async function testEmail() {
+    setTesting(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const res = await api.sendTestEmail()
+      setMessage(`E-mail de test envoyé à ${res.sent_to}. Vérifiez la boîte de réception (et les indésirables).`)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const monteursSansEmail = users.filter((u) => u.role === 'monteur' && u.is_active && !u.email)
 
   async function toggleActive(user) {
     setError(null)
@@ -343,11 +557,33 @@ function UsersPanel({ onChanged }) {
       <div className="section-title">
         <div>
           <h2>Comptes</h2>
-          <p>Un compte par rôle : assistante, sélection, montage, administration.</p>
+          <p>
+            Un compte par rôle : assistante, sélection, montage, administration. Quand un avis est
+            retenu, le responsable du montage est prévenu par e-mail.
+          </p>
         </div>
-        <button className="btn" onClick={() => setCreating(true)}>Créer un compte</button>
+        <div className="row">
+          {emailEnabled && (
+            <button className="btn btn-outline" onClick={testEmail} disabled={testing}>
+              {testing ? 'Envoi…' : "Tester l'envoi d'e-mail"}
+            </button>
+          )}
+          <button className="btn" onClick={() => setCreating(true)}>Créer un compte</button>
+        </div>
       </div>
 
+      {emailEnabled === false && (
+        <div className="banner banner-warning">
+          L'envoi d'e-mails n'est pas encore configuré sur le serveur : aucune notification ne part pour
+          l'instant.
+        </div>
+      )}
+      {emailEnabled && monteursSansEmail.length > 0 && (
+        <div className="banner banner-warning">
+          Sans adresse e-mail, ces comptes montage ne seront pas prévenus :{' '}
+          {monteursSansEmail.map((u) => u.full_name || u.username).join(', ')}.
+        </div>
+      )}
       {error && <div className="banner banner-error">{error}</div>}
       {message && <div className="banner banner-success">{message}</div>}
 
@@ -357,6 +593,7 @@ function UsersPanel({ onChanged }) {
             <tr>
               <th>Identifiant</th>
               <th>Nom</th>
+              <th>E-mail</th>
               <th>Profil</th>
               <th>État</th>
               <th>Dernière connexion</th>
@@ -368,6 +605,7 @@ function UsersPanel({ onChanged }) {
               <tr key={user.id}>
                 <td><strong>{user.username}</strong></td>
                 <td>{user.full_name || '—'}</td>
+                <td>{user.email || <span className="muted">—</span>}</td>
                 <td>{ROLE_LABELS[user.role] || user.role}</td>
                 <td>
                   {user.is_active
@@ -384,6 +622,9 @@ function UsersPanel({ onChanged }) {
                 </td>
                 <td>
                   <div className="row">
+                    <button className="btn btn-sm btn-outline" onClick={() => editEmail(user)}>
+                      E-mail
+                    </button>
                     <button className="btn btn-sm btn-outline" onClick={() => resetPassword(user)}>
                       Réinitialiser
                     </button>
@@ -409,7 +650,7 @@ function UsersPanel({ onChanged }) {
 }
 
 function CreateUserModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ username: '', full_name: '', role: 'assistante', password: '' })
+  const [form, setForm] = useState({ username: '', full_name: '', email: '', role: 'assistante', password: '' })
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -445,6 +686,10 @@ function CreateUserModal({ onClose, onCreated }) {
         <div className="field">
           <label htmlFor="nu-name">Nom complet</label>
           <input id="nu-name" className="input" value={form.full_name} onChange={set('full_name')} />
+        </div>
+        <div className="field">
+          <label htmlFor="nu-email">E-mail (notifications)</label>
+          <input id="nu-email" type="email" className="input" value={form.email} onChange={set('email')} />
         </div>
         <div className="field">
           <label htmlFor="nu-role">Profil</label>

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from . import config, scraper_service
+from . import config, notifications, scraper_service
 from .auth import get_current_user, log_activity, seed_default_users
 from .config import SOURCES, SOURCE_BY_ID
 from .database import Base, SessionLocal, engine, get_db, run_lightweight_migrations
@@ -28,6 +28,7 @@ run_lightweight_migrations()
 # seule fois, si la table des utilisateurs est encore vide.
 with SessionLocal() as _session:
     seed_default_users(_session)
+    scraper_service.purge_obsolete_tenders(_session)
     # Recalcule la pertinence metier de tous les avis deja en base, pour que le
     # filtre "avis lies a notre activite" reflete toujours le profil courant.
     scraper_service.reclassify_relevance(_session)
@@ -77,6 +78,7 @@ def public_config():
         "journal_working_days": config.JOURNAL_WORKING_DAYS,
         "doc_alert_days_before_deadline": config.DOC_ALERT_DAYS_BEFORE_DEADLINE,
         "max_upload_mb": config.MAX_UPLOAD_MB,
+        "email_enabled": notifications.is_configured(),
     }
 
 

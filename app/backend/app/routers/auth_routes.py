@@ -20,6 +20,7 @@ def user_out(user: User) -> UserOut:
         id=user.id,
         username=user.username,
         full_name=user.full_name,
+        email=user.email,
         role=user.role,
         role_label=ROLE_LABELS.get(user.role, user.role),
         is_active=user.is_active,

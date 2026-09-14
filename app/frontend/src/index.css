@@ -426,14 +426,6 @@ body {
 
 .login-form { display: flex; flex-direction: column; gap: 14px; }
 
-.login-hint {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  font-size: 0.78rem;
-  color: var(--muted-foreground);
-  line-height: 1.6;
-}
 
 /* --------------------------------------------------------------------------
    Barre d'outils de la veille
@@ -569,6 +561,7 @@ body {
 .badge-expired { background: var(--adoc-red); }
 .badge-retenu { background: var(--success); }
 .badge-rejete { background: #6b7280; }
+.badge-warning { background: #b45309; }
 .badge-outline {
   background: transparent;
   border: 1px solid var(--border-strong);

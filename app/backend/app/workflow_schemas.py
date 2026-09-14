@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     full_name: Optional[str] = None
+    email: Optional[str] = None
     role: str
     role_label: Optional[str] = None
     is_active: bool
@@ -47,12 +48,15 @@ class PasswordChangeIn(BaseModel):
 class UserCreateIn(BaseModel):
     username: str = Field(min_length=3, max_length=80)
     full_name: Optional[str] = None
+    email: Optional[str] = Field(default=None, max_length=200)
     role: str
     password: str = Field(min_length=6)
 
 
 class UserUpdateIn(BaseModel):
     full_name: Optional[str] = None
+    # Chaine vide = retirer l'adresse.
+    email: Optional[str] = Field(default=None, max_length=200)
     role: Optional[str] = None
     is_active: Optional[bool] = None
     new_password: Optional[str] = Field(default=None, min_length=6)
@@ -227,6 +231,28 @@ class AlertOut(BaseModel):
     date: Optional[str] = None
     target_id: Optional[int] = None
     days_left: Optional[int] = None
+
+
+class SourceHealthOut(BaseModel):
+    """Etat d'un site de la veille : ce qu'on en a recupere et sa derniere collecte."""
+
+    id: str
+    name: str
+    url: str
+    zone: str
+    has_scraper: bool
+    tender_count: int = 0        # avis en base, toutes dates confondues
+    relevant_count: int = 0      # dont lies a l'activite du cabinet
+    open_count: int = 0          # dont date limite non depassee (ou inconnue)
+    last_item_at: Optional[datetime] = None  # derniere mise a jour d'un avis
+    last_run_at: Optional[datetime] = None
+    last_status: Optional[str] = None        # ok | error | skipped
+    last_error: Optional[str] = None
+    last_total_found: int = 0
+    last_new_items: int = 0
+    last_success_at: Optional[datetime] = None
+    # ok | vide | erreur | jamais | sans_scraper
+    health: str
 
 
 class AdminDashboardOut(BaseModel):

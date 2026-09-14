@@ -1,14 +1,16 @@
 """
 Scraper BOAD (Banque Ouest Africaine de Developpement).
 
-Page /fr/opportunites/appels-doffre/ : liste de cartes, chacune avec un
-titre (lien), un type d'avis (Avis d'appel d'offre / Avis de manifestation
-d'interet / Resultats.../ Plan de Passation...), une plage de dates
-(DD/MM/YYYY - DD/MM/YYYY, optionnelle) et un lien "Voir plus".
-Pagination classique ?page=N.
+Depuis sept. 2026 le site est une application Laravel/Inertia : la page
+/fr/opportunites/appels-doffre ne contient plus de cartes HTML, les avis sont
+fournis en JSON dans l'attribut `data-page` de la racine de l'application
+(props.tenders, pagination Laravel classique ?page=N, 6 avis par page).
+Chaque avis porte un titre, un lien relatif, une date de publication et,
+quand elle est renseignee, une plage acf.start_at / acf.end_at (JJ/MM/AAAA).
 """
 from __future__ import annotations
 
+import json
 import re
 
 from bs4 import BeautifulSoup
@@ -16,8 +18,11 @@ from bs4 import BeautifulSoup
 from .base import BaseScraper, TenderItem
 
 LISTING_URL = "https://www.boad.org/fr/opportunites/appels-doffre"
-DATE_RANGE_RE = re.compile(r"(\d{2}/\d{2}/\d{4})\s*-\s*(\d{2}/\d{2}/\d{4})")
-PAGES_TO_FETCH = 3
+PAGES_TO_FETCH = 5
+DATE_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+# Resultats, PV d'ouverture, plans de passation : pas des opportunites a saisir.
+NOT_AN_OPPORTUNITY_RE = re.compile(
+    r"^\s*(r[ée]sultats?|pv d|proc[eè]s[- ]verbal|plan de passation|avis d.attribution)", re.I)
 
 
 class BoadScraper(BaseScraper):
@@ -27,75 +32,84 @@ class BoadScraper(BaseScraper):
     default_zone = "uemoa"
 
     def fetch(self) -> list[TenderItem]:
-        items = []
-        seen = set()
-        for page in range(PAGES_TO_FETCH):
-            url = LISTING_URL if page == 0 else f"{LISTING_URL}?page={page}"
+        items: list[TenderItem] = []
+        seen: set[str] = set()
+        for page in range(1, PAGES_TO_FETCH + 1):
+            url = LISTING_URL if page == 1 else f"{LISTING_URL}?page={page}"
             try:
-                resp = self.get(url)
+                # pages lourdes (~500 Ko) et serveur lent
+                resp = self.get(url, timeout=45)
             except Exception:
+                if page == 1:
+                    raise
+                break  # on garde les avis des pages deja lues
+            tenders = self._tenders_payload(resp.text)
+            if tenders is None:
+                if page == 1:
+                    # Structure du site modifiee : on le signale au lieu de
+                    # renvoyer silencieusement 0 avis.
+                    raise RuntimeError("Structure de la page BOAD inattendue (attribut data-page absent).")
                 break
-            soup = BeautifulSoup(resp.text, "html.parser")
-            page_items = self._parse(soup)
-            if not page_items:
-                break
-            new_count = 0
-            for it in page_items:
-                if it.url in seen:
-                    continue
-                seen.add(it.url)
-                items.append(it)
-                new_count += 1
-            if new_count == 0:
+
+            for row in tenders.get("data") or []:
+                item = self._to_item(row)
+                if item and item.url not in seen:
+                    seen.add(item.url)
+                    items.append(item)
+
+            if not tenders.get("next_page_url"):
                 break
         return items
 
-    def _parse(self, soup: BeautifulSoup) -> list[TenderItem]:
-        results = []
-        for a in soup.find_all("a", href=True):
-            if self.clean_text(a.get_text()) != "Voir plus":
-                continue
-            href = a["href"]
+    @staticmethod
+    def _tenders_payload(html: str):
+        soup = BeautifulSoup(html, "html.parser")
+        root = soup.find(attrs={"data-page": True})
+        if root is None:
+            return None
+        try:
+            return json.loads(root["data-page"])["props"]["tenders"]
+        except (ValueError, KeyError, TypeError):
+            return None
 
-            block = self.find_ancestor_with(a, lambda el: el.find(["h1", "h2", "h3"]) is not None)
-            heading = block.find(["h1", "h2", "h3"])
-            title = self.clean_text(heading.get_text()) if heading else None
-            if not title:
-                continue
+    def _to_item(self, row: dict) -> TenderItem | None:
+        title = self.clean_text(row.get("title"))
+        link = row.get("link")
+        if not title or not link or NOT_AN_OPPORTUNITY_RE.match(title):
+            return None
 
-            block_text = self.clean_text(block.get_text(" ")) or ""
-            date_match = DATE_RANGE_RE.search(block_text)
-            published, deadline = (None, None)
-            if date_match:
-                published = self._to_iso(date_match.group(1))
-                deadline = self._to_iso(date_match.group(2))
+        acf = row.get("acf") or {}
+        published = self._to_iso(acf.get("start_at")) or (row.get("date_gmt") or "")[:10] or None
+        deadline = self._to_iso(acf.get("end_at"))
+        presentation = (acf.get("presentation") or {}).get("text") or ""
+        description = self.clean_text(BeautifulSoup(presentation, "html.parser").get_text(" ")) if presentation else None
+        country, zone = self.guess_country_zone(title, self.default_zone)
 
-            category = self.guess_category(block_text)
-            country, zone = self.guess_country_zone(title, self.default_zone)
-
-            results.append(TenderItem(
-                title=title,
-                url=self._absolute(href),
-                source_id=self.source_id,
-                source_name=self.source_name,
-                zone=zone,
-                entity="BOAD",
-                category=category,
-                country=country,
-                published_date=published,
-                deadline_date=deadline,
-                description=None,
-                dedupe_key=f"boad|{href}",
-            ))
-        return results
+        return TenderItem(
+            title=title,
+            url=self._absolute(link),
+            source_id=self.source_id,
+            source_name=self.source_name,
+            zone=zone,
+            entity="BOAD",
+            category=self.guess_category(title),
+            country=country,
+            published_date=published,
+            deadline_date=deadline,
+            description=description,
+            # meme cle qu'avant la refonte du site : pas de doublons en base
+            dedupe_key=f"boad|{link}",
+        )
 
     @staticmethod
     def _to_iso(date_str):
-        try:
-            d, m, y = date_str.split("/")
-            return f"{y}-{m}-{d}"
-        except Exception:
-            return date_str
+        if not date_str:
+            return None
+        m = DATE_RE.match(str(date_str).strip())
+        if not m:
+            return None
+        d, mo, y = m.groups()
+        return f"{y}-{mo}-{d}"
 
     @staticmethod
     def _absolute(href: str) -> str:

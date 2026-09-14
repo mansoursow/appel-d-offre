@@ -52,7 +52,8 @@ class BaseScraper:
 
     def get(self, url: str, **kwargs) -> requests.Response:
         headers = {**DEFAULT_HEADERS, **kwargs.pop("headers", {})}
-        resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT, **kwargs)
+        timeout = kwargs.pop("timeout", REQUEST_TIMEOUT)
+        resp = requests.get(url, headers=headers, timeout=timeout, **kwargs)
         resp.raise_for_status()
         return resp
 

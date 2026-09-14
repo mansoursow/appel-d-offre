@@ -92,6 +92,12 @@ volume. Deux réglages restent recommandés (*Variables* dans le service) :
 |---|---|---|
 | `SECRET_KEY` | une chaîne aléatoire longue | Clé maîtrisée, indépendante du volume. La générer avec `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Si elle change, tout le monde est déconnecté. |
 | `TOKEN_TTL_SECONDS` | `43200` | Durée d'une session (12 h). |
+| `BREVO_API_KEY` | clé API Brevo | E-mail au responsable du montage quand un avis est retenu. Railway Hobby bloque le SMTP : l'envoi passe par l'API Brevo. Domaine `adoc-consulting.com` authentifié chez Brevo (DKIM `brevo1`/`brevo2`). |
+| `EMAIL_FROM` | `Veille AO <veille@adoc-consulting.com>` | Expéditeur des notifications, sur le domaine authentifié. |
+
+Après tout ajout ou modification de variable, cliquer sur **Deploy** dans le
+bandeau « Apply N changes » : tant qu'il n'est pas validé, le service ne voit pas
+la variable.
 
 Railway fournit `PORT` automatiquement ; le conteneur l'utilise déjà.
 

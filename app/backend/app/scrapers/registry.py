@@ -30,6 +30,7 @@ from .expertise_france import ExpertiseFranceScraper
 from .giz import GizScraper
 from .aics_dakar import AicsDakarScraper
 from .benin import BeninScraper
+from .dgcmp_guinee import DgcmpGuineeScraper
 
 ACTIVE_SCRAPERS = [
     UndpScraper(),
@@ -56,6 +57,7 @@ ACTIVE_SCRAPERS = [
     GizScraper(),
     AicsDakarScraper(),
     BeninScraper(),
+    DgcmpGuineeScraper(),
 ]
 
 ACTIVE_SCRAPERS_BY_ID = {s.source_id: s for s in ACTIVE_SCRAPERS}

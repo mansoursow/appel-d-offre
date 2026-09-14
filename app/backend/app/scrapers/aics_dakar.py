@@ -21,6 +21,7 @@ KEYWORDS = ["avviso", "bando", "manifestazione", "appel"]
 AVVISI_PAGE = "https://dakar.aics.gov.it/aics/avvisi-di-gara-enti-terzi/"
 
 TAG_RE = re.compile(r"<[^>]+>")
+SECTION_TITLE_RE = re.compile(r"^\s*(avvisi di gara( enti terzi)?|bandi di gara( e contratti)?)\s*$", re.I)
 
 
 class AicsDakarScraper(BaseScraper):
@@ -73,6 +74,9 @@ class AicsDakarScraper(BaseScraper):
                 if not re.search(r"avvis|band|gara|manifestazion|appel", (text + href).lower()):
                     continue
                 if re.search(r"/aics/(struttura|partnerships|profilo|titolare|cooperazione)", href):
+                    continue
+                # Liens de menu vers les rubriques elles-memes, pas des avis.
+                if SECTION_TITLE_RE.match(text) or href.split("?")[0].rstrip("/") == AVVISI_PAGE.rstrip("/"):
                     continue
                 seen.add(href)
                 country, zone = self.guess_country_zone(text, self.default_zone)

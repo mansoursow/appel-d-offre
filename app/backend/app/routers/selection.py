@@ -14,10 +14,10 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from .. import auth, config, storage
+from .. import auth, config, notifications, storage
 from ..config import ALLOWED_DOC_EXTENSIONS, ROLE_LABELS
 from ..database import get_db
 from ..models import JournalPhoto, Selection, SubmissionDocument, Tender, User
@@ -102,6 +102,7 @@ def get_selection(
 @router.post("/selections", response_model=SelectionOut)
 def create_selection(
     payload: SelectionCreateIn,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current: User = Depends(auth.require_roles(*config.ROLES_CAN_SELECT)),
 ):
@@ -179,6 +180,9 @@ def create_selection(
     )
     db.commit()
     db.refresh(selection)
+    if decision == "retenu":
+        # Previent le responsable du montage qu'un dossier l'attend.
+        background.add_task(notifications.notify_dossier_assigned, selection.id)
     return serialize_selection(selection)
 
 
@@ -186,17 +190,21 @@ def create_selection(
 def update_selection(
     selection_id: int,
     payload: SelectionUpdateIn,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current: User = Depends(auth.require_roles(*config.ROLES_CAN_SELECT)),
 ):
     selection = _get_selection(db, selection_id)
     changes = []
+    # Nouveau travail pour quelqu'un : avis repasse "retenu" ou confie a un autre responsable.
+    notify = False
 
     if payload.decision and payload.decision != selection.decision:
         if payload.decision not in ("retenu", "rejete"):
             raise HTTPException(status_code=400, detail="Décision attendue : 'retenu' ou 'rejete'.")
         changes.append(f"decision {selection.decision} -> {payload.decision}")
         selection.decision = payload.decision
+        notify = payload.decision == "retenu"
 
     if payload.comment is not None:
         selection.comment = payload.comment
@@ -213,6 +221,8 @@ def update_selection(
         assignee = db.query(User).filter(User.id == payload.assigned_to_id).first()
         if not assignee or not assignee.is_active:
             raise HTTPException(status_code=400, detail="Le responsable désigné est introuvable ou désactivé.")
+        if payload.assigned_to_id != selection.assigned_to_id:
+            notify = True
         changes.append(f"responsable -> {assignee.full_name or assignee.username}")
         selection.assigned_to_id = payload.assigned_to_id
 
@@ -223,6 +233,8 @@ def update_selection(
     )
     db.commit()
     db.refresh(selection)
+    if notify and selection.decision == "retenu":
+        background.add_task(notifications.notify_dossier_assigned, selection.id)
     return serialize_selection(selection)
 
 

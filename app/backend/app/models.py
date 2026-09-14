@@ -59,6 +59,25 @@ class Tender(Base):
     )
 
 
+class SourceRun(Base):
+    """Resultat de la derniere collecte d'une source (une ligne par source).
+
+    Permet a l'administrateur de reperer les sites qui ne remontent plus rien :
+    scraper en erreur, site en panne, ou collecte reussie mais vide.
+    """
+
+    __tablename__ = "source_runs"
+
+    source_id = Column(String(50), primary_key=True)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    last_status = Column(String(20), nullable=True)   # ok | error | skipped
+    last_error = Column(Text, nullable=True)
+    last_total_found = Column(Integer, nullable=False, default=0)
+    last_new_items = Column(Integer, nullable=False, default=0)
+    # Derniere collecte ayant effectivement ramene au moins un avis.
+    last_success_at = Column(DateTime(timezone=True), nullable=True)
+
+
 # ---------------------------------------------------------------------------
 # Espace de travail interne : comptes, journaux physiques, selection, dossiers
 # ---------------------------------------------------------------------------
@@ -80,6 +99,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(80), unique=True, index=True, nullable=False)
     full_name = Column(String(200), nullable=True)
+    # Adresse de notification (ex : un avis retenu confie a ce compte).
+    email = Column(String(200), nullable=True)
     role = Column(String(30), nullable=False, index=True)
     password_hash = Column(String(300), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)

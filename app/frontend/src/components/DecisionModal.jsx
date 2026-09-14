@@ -92,6 +92,7 @@ export default function DecisionModal({ avis, decision, onClose, onSaved }) {
               </select>
               <span className="muted">
                 Cette personne devra joindre l'offre technique et l'offre financière avant l'échéance.
+                Elle est prévenue par e-mail (sans responsable désigné, tous les comptes montage le sont).
               </span>
             </div>
           </>

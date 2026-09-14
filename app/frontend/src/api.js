@@ -233,6 +233,20 @@ export function fetchActivityLogs({ userId, role, action, limit = 200 } = {}) {
   return request(`/api/admin/logs?${params.toString()}`)
 }
 
+export function fetchConfig() {
+  return request('/api/config')
+}
+
+/** Envoie un e-mail d'essai à l'administrateur connecté. */
+export function sendTestEmail() {
+  return request('/api/admin/test-email', { method: 'POST' })
+}
+
+/** Tous les sites de la veille avec leurs avis récupérés et l'état de la dernière collecte. */
+export function fetchAdminSources() {
+  return request('/api/admin/sources')
+}
+
 export function fetchUsers() {
   return request('/api/admin/users')
 }

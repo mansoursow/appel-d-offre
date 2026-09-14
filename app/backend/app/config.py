@@ -51,8 +51,9 @@ SOURCES = [
      "zone": "uemoa", "status": "active"},
     {"id": "afd_dgmarket", "name": "Cooperation internationale (AFD/DgMarket)", "url": "https://afd.dgmarket.com/",
      "zone": "international", "status": "active"},
-    # Expertise France publie sur PLACE (marches-publics.gouv.fr), scrape de la
-    # liste "toutes les consultations" de la plateforme.
+    # Expertise France passe ses marches sur PLACE (marches-publics.gouv.fr),
+    # dont la liste publique melange tous les acheteurs : ses avis sont
+    # recuperes via l'API officielle TED, filtree sur Expertise France.
     {"id": "expertise_france", "name": "Expertise France", "url": "https://marches-publics.gouv.fr",
      "zone": "international", "status": "active"},
     # Le portail GIZ (cosinex) exige JavaScript : les avis GIZ sont recuperes
@@ -87,10 +88,10 @@ SOURCES = [
      "zone": "uemoa", "status": "active"},
     {"id": "arcop_ci", "name": "ARCOP Cote d'Ivoire", "url": "https://arcop.ci/",
      "zone": "uemoa", "status": "active"},
-    # Le site officiel affiche "Site en Construction" (verifie 13/07/2026) :
-    # rien a scraper tant qu'il n'est pas remis en ligne.
-    {"id": "dgcmp_guinee", "name": "DGCMP Guinee Conakry", "url": "https://www.dgcmp.mef.gov.gn/appels-doffres/",
-     "zone": "uemoa", "status": "placeholder"},
+    # L'ancienne adresse www.dgcmp.mef.gov.gn est "en construction" : la DGCMP
+    # publie sur dgcmp.gov.gn (WordPress, lu via son API REST).
+    {"id": "dgcmp_guinee", "name": "DGCMP Guinee Conakry", "url": "https://dgcmp.gov.gn/appels-doffres/",
+     "zone": "uemoa", "status": "active"},
     {"id": "malipages", "name": "Mali Pages", "url": "https://www.malipages.com/avis-appels-offres/",
      "zone": "uemoa", "status": "active"},
     {"id": "dgmp_mali", "name": "Site officiel Mali (DGMP)", "url": "https://www.dgmp.gouv.ml/",
@@ -200,6 +201,24 @@ FRONTEND_DIST = os.environ.get(
     "FRONTEND_DIST",
     os.path.join(os.path.dirname(_BACKEND_DIR), "frontend", "dist"),
 )
+
+# ---------------------------------------------------------------------------
+# Notifications par e-mail
+# ---------------------------------------------------------------------------
+# Quand un avis est retenu, le responsable du montage recoit un e-mail.
+# Railway bloque le SMTP sortant sur les offres Free/Hobby : on passe donc de
+# preference par l'API HTTPS d'un service d'envoi (Brevo ou Resend). Le SMTP
+# reste possible (developpement local, offre Railway Pro). Sans aucune de ces
+# variables, l'application fonctionne normalement mais n'envoie rien.
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "")            # ex : Veille AO <veille@adoc-consulting.com>
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+# Adresse du site, pour le lien "ouvrir le dossier" des e-mails.
+APP_PUBLIC_URL = os.environ.get("APP_PUBLIC_URL", "https://app.adoc-consulting.com").rstrip("/")
 
 # Taille maximale acceptee pour un fichier envoye (photos, offres).
 MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 25))

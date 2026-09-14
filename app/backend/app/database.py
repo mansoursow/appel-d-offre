@@ -26,17 +26,23 @@ def run_lightweight_migrations():
     colonnes attendues et on les ajoute si besoin (ALTER TABLE ... ADD COLUMN,
     supporte nativement par SQLite).
     """
-    inspector = inspect(engine)
-    if "tenders" not in inspector.get_table_names():
-        return  # la table sera creee par Base.metadata.create_all()
-
-    existing_columns = {col["name"] for col in inspector.get_columns("tenders")}
     expected_columns = {
-        "deadline_iso": "VARCHAR(10)",
-        "is_relevant": "BOOLEAN NOT NULL DEFAULT 1",
+        "tenders": {
+            "deadline_iso": "VARCHAR(10)",
+            "is_relevant": "BOOLEAN NOT NULL DEFAULT 1",
+        },
+        "users": {
+            "email": "VARCHAR(200)",
+        },
     }
 
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
     with engine.begin() as conn:
-        for name, sql_type in expected_columns.items():
-            if name not in existing_columns:
-                conn.execute(text(f"ALTER TABLE tenders ADD COLUMN {name} {sql_type}"))
+        for table, columns in expected_columns.items():
+            if table not in tables:
+                continue  # la table sera creee par Base.metadata.create_all()
+            existing_columns = {col["name"] for col in inspector.get_columns(table)}
+            for name, sql_type in columns.items():
+                if name not in existing_columns:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))

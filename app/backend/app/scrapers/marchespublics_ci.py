@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import re
 
+import requests
 from bs4 import BeautifulSoup
 
 from .base import BaseScraper, TenderItem
 
 LISTING_URL = "https://marchespublics.ci/appel_offre"
-DATE_RE = re.compile(r"(\d{2})-(\d{2})-(\d{4})")
+# "-0001" : date vide cote serveur (ex. "30-11--0001")
+DATE_RE = re.compile(r"(\d{2})-(\d{2})-(-?\d{4})")
 
 
 class MarchesPublicsCIScraper(BaseScraper):
@@ -24,7 +26,12 @@ class MarchesPublicsCIScraper(BaseScraper):
     default_zone = "uemoa"
 
     def fetch(self) -> list[TenderItem]:
-        resp = self.get(LISTING_URL)
+        # Page tres lourde (~1,2 Mo, tout l'historique) et serveur lent : le
+        # delai standard de 20 s coupe regulierement la connexion.
+        try:
+            resp = self.get(LISTING_URL, timeout=60)
+        except requests.exceptions.RequestException:
+            resp = self.get(LISTING_URL, timeout=90)
         soup = BeautifulSoup(resp.text, "html.parser")
 
         table = None

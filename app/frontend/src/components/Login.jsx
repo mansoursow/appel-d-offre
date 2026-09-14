@@ -21,7 +21,7 @@ export default function Login({ onLoggedIn }) {
       // le message brut n'aide pas l'utilisateur, on explique la cause.
       setError(
         /failed to fetch|networkerror|load failed/i.test(e.message)
-          ? "Le serveur ne répond pas. Vérifiez que le backend est démarré (python -m uvicorn app.main:app --reload dans le dossier backend)."
+          ? 'Le service est momentanément indisponible. Réessayez dans quelques instants.'
           : e.message,
       )
     } finally {
@@ -47,7 +47,6 @@ export default function Login({ onLoggedIn }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
-              placeholder="admin, assistante, selection, superviseur, montage…"
               autoFocus
               required
             />
@@ -68,16 +67,6 @@ export default function Login({ onLoggedIn }) {
             {busy ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
-
-        <p className="login-hint">
-          Cinq profils : <strong>administrateur</strong> (supervision et alertes),
-          {' '}<strong>assistante</strong> (dépôt quotidien des journaux),
-          {' '}<strong>sélection</strong> et <strong>superviseur</strong> (choix des avis à soumissionner) et
-          {' '}<strong>montage</strong> (offres technique et financière).
-          <br />
-          Identifiants à demander à l'administrateur. Au premier accès, le mot de passe
-          initial doit être remplacé.
-        </p>
       </div>
     </div>
   )

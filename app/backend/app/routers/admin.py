@@ -10,20 +10,25 @@ qu'il constate :
 """
 from __future__ import annotations
 
+import re
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
-from .. import auth
-from ..config import ROLE_LABELS, ROLES
+from .. import auth, notifications
+from ..config import ROLE_LABELS, ROLES, SOURCES
 from ..database import get_db
-from ..models import ActivityLog, Selection, User
+from ..models import ActivityLog, Selection, SourceRun, Tender, User
+from ..scrapers.registry import ACTIVE_SCRAPERS_BY_ID
 from ..workflow_schemas import (
     ActivityLogOut,
     AdminDashboardOut,
     AlertOut,
     JournalComplianceOut,
+    SourceHealthOut,
     UserCreateIn,
     UserOut,
     UserUpdateIn,
@@ -108,8 +113,93 @@ def logs(
 
 
 # --------------------------------------------------------------------------
+# Sources de la veille
+# --------------------------------------------------------------------------
+@router.get("/sources", response_model=list[SourceHealthOut])
+def sources_health(db: Session = Depends(get_db), current: User = Depends(admin_only)):
+    """Tous les sites de la veille : nombre d'avis recuperes et etat de la
+    derniere collecte, pour reperer ceux qui ne remontent plus rien."""
+    today_iso = date.today().isoformat()
+    open_expr = or_(Tender.deadline_iso.is_(None), Tender.deadline_iso >= today_iso)
+    rows = db.query(
+        Tender.source_id,
+        func.count(Tender.id),
+        func.sum(case((Tender.is_relevant.is_(True), 1), else_=0)),
+        func.sum(case((open_expr, 1), else_=0)),
+        func.max(Tender.scraped_at),
+    ).group_by(Tender.source_id).all()
+    counts = {sid: (total, relevant or 0, opened or 0, last) for sid, total, relevant, opened, last in rows}
+    runs = {run.source_id: run for run in db.query(SourceRun).all()}
+
+    out = []
+    for source in SOURCES:
+        sid = source["id"]
+        total, relevant, opened, last_item_at = counts.get(sid, (0, 0, 0, None))
+        run = runs.get(sid)
+        has_scraper = sid in ACTIVE_SCRAPERS_BY_ID
+
+        if not has_scraper:
+            health = "sans_scraper"
+        elif run is None:
+            # Avis collectes avant la mise en place de ce suivi : on s'en tient a la base.
+            health = "ok" if total else "jamais"
+        elif run.last_status == "error":
+            health = "erreur"
+        elif run.last_total_found == 0:
+            health = "vide"
+        else:
+            health = "ok"
+
+        out.append(SourceHealthOut(
+            id=sid, name=source["name"], url=source["url"], zone=source["zone"],
+            has_scraper=has_scraper,
+            tender_count=total, relevant_count=relevant, open_count=opened,
+            last_item_at=last_item_at,
+            last_run_at=run.last_run_at if run else None,
+            last_status=run.last_status if run else None,
+            last_error=run.last_error if run else None,
+            last_total_found=run.last_total_found if run else 0,
+            last_new_items=run.last_new_items if run else 0,
+            last_success_at=run.last_success_at if run else None,
+            health=health,
+        ))
+    return out
+
+
+# --------------------------------------------------------------------------
 # Comptes
 # --------------------------------------------------------------------------
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _clean_email(value: Optional[str]) -> Optional[str]:
+    """Adresse normalisee, None si vide ; 400 si elle est manifestement invalide."""
+    email = (value or "").strip().lower()
+    if not email:
+        return None
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(status_code=400, detail="Adresse e-mail invalide.")
+    return email
+
+
+@router.post("/test-email")
+def send_test_email(current: User = Depends(admin_only)):
+    """Envoie un e-mail d'essai a l'administrateur connecte, pour verifier la configuration."""
+    if not notifications.is_configured():
+        raise HTTPException(status_code=400, detail="Aucun service d'envoi d'e-mails n'est configuré sur le serveur.")
+    if not current.email:
+        raise HTTPException(status_code=400, detail="Renseignez d'abord une adresse e-mail sur votre compte.")
+    try:
+        notifications.send_email(
+            [current.email],
+            "Test d'envoi — Veille Appels d'Offres",
+            "Les notifications par e-mail fonctionnent.",
+            "<p>Les notifications par e-mail fonctionnent.</p>",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Échec de l'envoi : {exc}")
+    return {"sent_to": current.email}
+
 @router.get("/users", response_model=list[UserOut])
 def list_users(db: Session = Depends(get_db), current: User = Depends(admin_only)):
     return [user_out(u) for u in db.query(User).order_by(User.role, User.username).all()]
@@ -131,6 +221,7 @@ def create_user(
     user = User(
         username=username,
         full_name=payload.full_name,
+        email=_clean_email(payload.email),
         role=payload.role,
         password_hash=auth.hash_password(payload.password),
         is_active=True,
@@ -163,6 +254,10 @@ def update_user(
     if payload.full_name is not None:
         user.full_name = payload.full_name
         changes.append("nom")
+
+    if payload.email is not None:
+        user.email = _clean_email(payload.email)
+        changes.append("e-mail")
 
     if payload.role is not None and payload.role != user.role:
         if payload.role not in ROLES:

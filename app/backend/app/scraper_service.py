@@ -3,11 +3,12 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from . import config
 from .config import SOURCE_BY_ID
-from .models import Tender
+from .models import Selection, SourceRun, Tender
 from .scrapers.registry import ACTIVE_SCRAPERS, ACTIVE_SCRAPERS_BY_ID
 from .schemas import RefreshResultOut
 
@@ -62,7 +63,33 @@ def parse_deadline_to_iso(deadline_text: str | None) -> str | None:
         return None
 
 
+def _record_run(db: Session, result: RefreshResultOut) -> None:
+    """Memorise le resultat de la collecte pour la page "Sources" de l'admin."""
+    now = datetime.now(timezone.utc)
+    run = db.get(SourceRun, result.source_id)
+    if run is None:
+        run = SourceRun(source_id=result.source_id)
+        db.add(run)
+    run.last_run_at = now
+    run.last_status = result.status
+    run.last_error = result.error
+    run.last_total_found = result.total_found
+    run.last_new_items = result.new_items
+    if result.status == "ok" and result.total_found > 0:
+        run.last_success_at = now
+    db.commit()
+
+
 def run_scraper(db: Session, source_id: str) -> RefreshResultOut:
+    result = _run_scraper(db, source_id)
+    try:
+        _record_run(db, result)
+    except Exception:  # le suivi ne doit jamais faire echouer la collecte
+        db.rollback()
+    return result
+
+
+def _run_scraper(db: Session, source_id: str) -> RefreshResultOut:
     scraper = ACTIVE_SCRAPERS_BY_ID.get(source_id)
     meta = SOURCE_BY_ID.get(source_id, {})
     name = meta.get("name", source_id)
@@ -137,6 +164,32 @@ def run_all(db: Session, source_ids: list[str] | None = None) -> tuple[datetime,
     results = [run_scraper(db, sid) for sid in ids]
     finished_at = datetime.now(timezone.utc)
     return started_at, finished_at, results
+
+
+# Avis enregistres a tort par d'anciennes versions des scrapers :
+#  - "place|..." : consultations de tout PLACE, sans lien avec Expertise France ;
+#  - pages de rubrique AICS prises pour des avis.
+OBSOLETE_DEDUPE_KEY_PATTERNS = ["place|%"]
+OBSOLETE_DEDUPE_KEYS = [
+    "aics|https://dakar.aics.gov.it/aics/avvisi-di-gara-enti-terzi/?lang=fr",
+    "aics|https://trasparenzadakar.aics.gov.it/pagina566_bandi-di-gara-e-contratti.html",
+]
+
+
+def purge_obsolete_tenders(db: Session) -> int:
+    """Supprime les faux avis listes ci-dessus. Un avis sur lequel une
+    decision a deja ete prise est conserve pour ne pas casser le dossier."""
+    conditions = [Tender.dedupe_key.like(p) for p in OBSOLETE_DEDUPE_KEY_PATTERNS]
+    conditions.append(Tender.dedupe_key.in_(OBSOLETE_DEDUPE_KEYS))
+    referenced = db.query(Selection.tender_id).filter(Selection.tender_id.isnot(None))
+    removed = (
+        db.query(Tender)
+        .filter(or_(*conditions), Tender.id.notin_(referenced))
+        .delete(synchronize_session=False)
+    )
+    if removed:
+        db.commit()
+    return removed
 
 
 def reclassify_relevance(db: Session) -> int:

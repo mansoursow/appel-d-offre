@@ -1,98 +1,76 @@
 """
-Scraper PLACE (marches-publics.gouv.fr) - plateforme des achats de l'Etat
-francais, ou publient Expertise France et les operateurs francais.
+Scraper Expertise France - agence francaise de cooperation technique.
 
-Page ?page=Entreprise.EntrepriseAdvancedSearch&AllCons : blocs
-div.item_consultation avec cons_procedure, cons_categorie, date limite
-(div.day / div.month / div.year), cons_intitule "REF | Titre" et
-"Objet : ...". Les liens de detail sont en JavaScript : on renvoie vers
-la page de recherche.
+Expertise France passe ses marches sur PLACE (marches-publics.gouv.fr), mais
+la liste publique de PLACE melange tous les acheteurs de l'Etat (hopitaux,
+armees...) et son filtre par organisme exige un formulaire PRADO avec
+session : l'ancien scraper remontait donc les 10 dernieres consultations de
+TOUT PLACE, sans aucun avis d'Expertise France.
+
+Comme la GIZ, Expertise France publie ses avis de marche sur TED : on
+interroge l'API officielle TED v3 filtree sur Expertise France comme acheteur.
 """
 from __future__ import annotations
 
-import re
-
 import requests
-from bs4 import BeautifulSoup
 
 from ..config import DEFAULT_HEADERS, REQUEST_TIMEOUT
 from .base import BaseScraper, TenderItem
+from .ted import TedScraper
 
-LISTING_URL = ("https://www.marches-publics.gouv.fr/"
-               "?page=Entreprise.EntrepriseAdvancedSearch&AllCons")
-
-MONTHS = {
-    "jan": "01", "fév": "02", "fev": "02", "mar": "03", "avr": "04",
-    "mai": "05", "juin": "06", "juil": "07", "aoû": "08", "aou": "08",
-    "sep": "09", "oct": "10", "nov": "11", "déc": "12", "dec": "12",
-}
+API_URL = "https://api.ted.europa.eu/v3/notices/search"
 
 
 class ExpertiseFranceScraper(BaseScraper):
     source_id = "expertise_france"
     source_name = "Expertise France"
-    source_url = LISTING_URL
+    source_url = "https://www.expertisefrance.fr/fr/marches-publics-appels-doffres-expertise-france"
     default_zone = "international"
 
     def fetch(self) -> list[TenderItem]:
-        sess = requests.Session()
-        sess.headers.update(DEFAULT_HEADERS)
-        resp = sess.get(LISTING_URL, timeout=REQUEST_TIMEOUT + 20)
+        payload = {
+            "query": 'buyer-name ~ ("Expertise France") SORT BY publication-date DESC',
+            "fields": [
+                "publication-number", "notice-title", "notice-type",
+                "publication-date", "deadline-receipt-tender-date-lot",
+            ],
+            "limit": 40,
+        }
+        resp = requests.post(API_URL, json=payload,
+                             headers={**DEFAULT_HEADERS, "Content-Type": "application/json"},
+                             timeout=REQUEST_TIMEOUT + 20)
         resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        notices = resp.json().get("notices", [])
 
         items: list[TenderItem] = []
-        for block in soup.find_all("div", class_="item_consultation"):
-            intitule_el = block.find("div", class_="cons_intitule") \
-                or block.find("div", class_="identification_consultation")
-            if intitule_el is None:
+        for n in notices:
+            pub_number = n.get("publication-number")
+            # Avis d'attribution (can-*) : le marche est deja passe.
+            if not pub_number or str(n.get("notice-type") or "").startswith("can"):
                 continue
-            intitule = self.clean_text(intitule_el.get_text()) or ""
-            # "REF | Titre ... Objet : description"
-            objet = None
-            m = re.search(r"Objet\s*:\s*(.+)", intitule)
-            if m:
-                objet = m.group(1).strip()
-                intitule = intitule[:m.start()].strip()
-            ref, _, title = intitule.partition("|")
-            ref = ref.strip()
-            title = title.strip() or intitule
+            title = TedScraper._multilang(n.get("notice-title")) or f"Avis Expertise France {pub_number}"
 
-            proc_el = block.find("div", class_="cons_procedure")
-            cat_el = block.find("div", class_="cons_categorie")
-            procedure = self.clean_text(proc_el.get_text()) if proc_el else None
-            categorie = self.clean_text(cat_el.get_text()) if cat_el else None
+            deadline = None
+            dl = n.get("deadline-receipt-tender-date-lot")
+            if isinstance(dl, list) and dl:
+                deadline = str(dl[0])[:10]
+            elif isinstance(dl, str):
+                deadline = dl[:10]
 
-            deadline = self._extract_date(block)
+            country, zone = self.guess_country_zone(title, self.default_zone)
+            category = self.guess_category(title)
 
-            if not title:
-                continue
             items.append(TenderItem(
                 title=title[:300],
-                url=LISTING_URL,
+                url=f"https://ted.europa.eu/fr/notice/{pub_number}",
                 source_id=self.source_id,
                 source_name=self.source_name,
-                zone=self.default_zone,
-                category="appel_offre",
-                country="France",
+                zone=zone,
+                entity="Expertise France",
+                category=category if category != "autre" else "appel_offre",
+                country=country,
+                published_date=(n.get("publication-date") or "")[:10] or None,
                 deadline_date=deadline,
-                description=self.clean_text(
-                    f"{procedure or ''} {categorie or ''} - {(objet or '')[:250]}"),
-                dedupe_key=f"place|{ref or title[:80]}",
+                dedupe_key=f"expertise_france|{pub_number}",
             ))
         return items
-
-    @staticmethod
-    def _extract_date(block) -> str | None:
-        day = block.find("div", class_="day")
-        month = block.find("div", class_="month")
-        year = block.find("div", class_="year")
-        if not (day and month and year):
-            return None
-        d = day.get_text(strip=True)
-        m_txt = month.get_text(strip=True).lower().rstrip(".")
-        y = year.get_text(strip=True)
-        for prefix, num in MONTHS.items():
-            if m_txt.startswith(prefix):
-                return f"{y}-{num}-{d.zfill(2)}"
-        return None
