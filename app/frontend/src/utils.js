@@ -18,6 +18,17 @@ export const JOURNAL_STATUS_LABELS = {
   ras: 'RAS',
 }
 
+/** Profils autorisés à retenir ou écarter un avis (et à confier un dossier). */
+export const SELECTION_ROLES = ['admin', 'selectionneur', 'superviseur']
+
+/** « Nom complet (identifiant) » : le nom seul ne dit pas quel compte on choisit. */
+export function userLabel(user) {
+  if (!user) return ''
+  return user.full_name && user.full_name !== user.username
+    ? `${user.full_name} (${user.username})`
+    : user.username
+}
+
 /** Affiche une date ISO en JJ/MM/AAAA ; laisse le texte intact sinon. */
 export function formatDate(value) {
   if (!value) return null

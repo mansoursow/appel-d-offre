@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import * as api from '../api.js'
 import {
-  CATEGORY_LABELS, DOSSIER_STATUS_LABELS, deadlineHint, formatDate, formatDateTime, formatSize,
+  CATEGORY_LABELS, DOSSIER_STATUS_LABELS, SELECTION_ROLES,
+  deadlineHint, formatDate, formatDateTime, formatSize, userLabel,
 } from '../utils.js'
 
 const DOC_TYPES = [
@@ -24,6 +25,34 @@ export default function DossiersPage({ user, onChanged }) {
   const [onlyMine, setOnlyMine] = useState(user.role === 'monteur')
 
   const canUpload = user.role === 'monteur' || user.role === 'admin'
+  // Admin / sélection / superviseur peuvent confier (ou reconfier) un dossier.
+  const canAssign = SELECTION_ROLES.includes(user.role)
+  const [monteurs, setMonteurs] = useState([])
+
+  useEffect(() => {
+    if (!canAssign) return
+    api.fetchAssignableUsers().then(setMonteurs).catch(() => setMonteurs([]))
+  }, [canAssign])
+
+  async function handleAssign(selection, userId) {
+    if (!userId || Number(userId) === selection.assigned_to_id) return
+    setBusyId(selection.id)
+    setError(null)
+    setMessage(null)
+    try {
+      const updated = await api.updateSelection(selection.id, { assigned_to_id: Number(userId) })
+      setSelections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+      setMessage(
+        `Dossier confié à ${updated.assigned_to_name}. Il est prévenu par e-mail si son adresse est renseignée `
+        + '(résultat visible dans le journal d\'activité).',
+      )
+      onChanged?.()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -93,6 +122,29 @@ export default function DossiersPage({ user, onChanged }) {
     try {
       const updated = await api.deleteSubmissionDocument(doc.id)
       setSelections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+      onChanged?.()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleDeleteSelection(selection) {
+    const pieces = selection.documents.length
+    const ok = window.confirm(
+      `Retirer le dossier « ${selection.title.slice(0, 90)} » ?\n\n`
+      + (pieces ? `Les ${pieces} pièce(s) jointe(s) seront définitivement supprimées.\n` : '')
+      + "L'avis redeviendra « sans décision » et pourra être retenu à nouveau.",
+    )
+    if (!ok) return
+    setBusyId(selection.id)
+    setError(null)
+    setMessage(null)
+    try {
+      await api.deleteSelection(selection.id)
+      setSelections((prev) => prev.filter((s) => s.id !== selection.id))
+      setMessage(`Dossier « ${selection.title.slice(0, 70)} » retiré.`)
       onChanged?.()
     } catch (e) {
       setError(e.message)
@@ -196,14 +248,45 @@ export default function DossiersPage({ user, onChanged }) {
                       ? `${formatDate(selection.deadline_iso)} · ${deadlineHint(selection.days_left)}`
                       : 'Échéance non renseignée'}
                   </p>
+                  {user.role === 'admin' && (
+                    <button
+                      className="btn btn-ghost"
+                      style={{ marginTop: 6 }}
+                      disabled={busyId === selection.id}
+                      onClick={() => handleDeleteSelection(selection)}
+                    >
+                      Retirer le dossier
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <p className="muted" style={{ marginTop: 8 }}>
-                Retenu par {selection.selected_by_name} le {formatDateTime(selection.created_at)}
-                {' · '}
-                Montage : {selection.assigned_to_name || <em>non assigné</em>}
-              </p>
+              <div className="row muted" style={{ marginTop: 8 }}>
+                <span>Retenu par {selection.selected_by_name} le {formatDateTime(selection.created_at)}</span>
+                <span>·</span>
+                {canAssign && selection.decision === 'retenu' ? (
+                  <label className="row" style={{ gap: 6 }}>
+                    Montage :
+                    <select
+                      className="select"
+                      style={{ width: 'auto', padding: '4px 8px' }}
+                      value={selection.assigned_to_id || ''}
+                      disabled={busyId === selection.id}
+                      onChange={(e) => handleAssign(selection, e.target.value)}
+                    >
+                      {!selection.assigned_to_id && <option value="">— non assigné —</option>}
+                      {selection.assigned_to_id && !monteurs.some((u) => u.id === selection.assigned_to_id) && (
+                        <option value={selection.assigned_to_id}>{selection.assigned_to_name}</option>
+                      )}
+                      {monteurs.map((u) => (
+                        <option key={u.id} value={u.id}>{userLabel(u)}</option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <span>Montage : {selection.assigned_to_name || <em>non assigné</em>}</span>
+                )}
+              </div>
               {selection.comment && (
                 <p className="tender-description">« {selection.comment} »</p>
               )}

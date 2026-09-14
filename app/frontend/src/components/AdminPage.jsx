@@ -22,6 +22,7 @@ const ACTION_LABELS = {
   avis_retenu: 'Avis retenu',
   avis_rejete: 'Avis écarté',
   modification_decision: 'Décision modifiée',
+  suppression_dossier: 'Dossier retiré',
   depot_offre: 'Offre déposée',
   suppression_offre: 'Offre retirée',
   collecte_veille: 'Collecte de la veille',

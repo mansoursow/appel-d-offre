@@ -228,4 +228,9 @@ if os.path.isfile(_INDEX_HTML):
         ):
             return FileResponse(candidate)
 
-        return FileResponse(_INDEX_HTML)
+        # index.html ne doit jamais etre garde en cache : c'est lui qui pointe
+        # vers les fichiers JS/CSS de la version courante. Sans cet en-tete, un
+        # navigateur continue d'afficher l'ancienne interface apres un
+        # deploiement. Les fichiers de /assets portent un hash dans leur nom et
+        # peuvent, eux, rester en cache.
+        return FileResponse(_INDEX_HTML, headers={"Cache-Control": "no-cache"})

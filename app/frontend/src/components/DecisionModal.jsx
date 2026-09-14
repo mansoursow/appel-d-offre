@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import * as api from '../api.js'
-import { formatDate } from '../utils.js'
+import { formatDate, userLabel } from '../utils.js'
 
 /**
  * Fenêtre de décision du responsable sélection : retenir ou écarter un avis,
@@ -87,7 +87,7 @@ export default function DecisionModal({ avis, decision, onClose, onSaved }) {
               >
                 <option value="">— À désigner plus tard —</option>
                 {monteurs.map((u) => (
-                  <option key={u.id} value={u.id}>{u.full_name || u.username}</option>
+                  <option key={u.id} value={u.id}>{userLabel(u)}</option>
                 ))}
               </select>
               <span className="muted">

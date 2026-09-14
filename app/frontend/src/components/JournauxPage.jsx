@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api.js'
 import DecisionModal from './DecisionModal.jsx'
 import {
-  JOURNAL_STATUS_LABELS, formatDate, formatDateTime, formatSize, isImage, todayIso,
+  JOURNAL_STATUS_LABELS, SELECTION_ROLES, formatDate, formatDateTime, formatSize, isImage, todayIso,
 } from '../utils.js'
 
 /**
@@ -25,7 +25,7 @@ export default function JournauxPage({ user, onChanged }) {
   const [entryDate, setEntryDate] = useState(todayIso())
 
   const isAssistante = user.role === 'assistante' || user.role === 'admin'
-  const canSelect = user.role === 'selectionneur' || user.role === 'admin'
+  const canSelect = SELECTION_ROLES.includes(user.role)
 
   const load = useCallback(async () => {
     setLoading(true)

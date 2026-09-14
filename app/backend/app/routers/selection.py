@@ -238,6 +238,32 @@ def update_selection(
     return serialize_selection(selection)
 
 
+@router.delete("/selections/{selection_id}", status_code=204)
+def delete_selection(
+    selection_id: int,
+    db: Session = Depends(get_db),
+    current: User = Depends(auth.require_roles()),  # administrateur uniquement
+):
+    """Retire un dossier (decision prise par erreur, avis abandonne...).
+
+    Les pieces jointes sont effacees du disque. L'avis d'origine redevient
+    "sans decision" dans la veille ou dans les journaux papier.
+    """
+    selection = _get_selection(db, selection_id)
+    stored_paths = [doc.stored_path for doc in selection.documents]
+    title = selection.title
+
+    db.delete(selection)
+    auth.log_activity(
+        db, current, "suppression_dossier",
+        target_type="selection", target_id=selection_id,
+        detail=f"{title[:150]} ({selection.decision}, {len(stored_paths)} piece(s) jointe(s) supprimee(s))",
+    )
+    db.commit()
+    for path in stored_paths:
+        storage.delete_file(path)
+
+
 @router.post("/selections/{selection_id}/documents", response_model=SelectionOut)
 def upload_document(
     selection_id: int,

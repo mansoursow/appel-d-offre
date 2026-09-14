@@ -197,6 +197,11 @@ export function updateSelection(selectionId, payload) {
   return request(`/api/selections/${selectionId}`, { method: 'PATCH', body: payload })
 }
 
+/** Administrateur : retire un dossier et ses pièces jointes. */
+export function deleteSelection(selectionId) {
+  return request(`/api/selections/${selectionId}`, { method: 'DELETE' })
+}
+
 export function uploadSubmissionDocument(selectionId, docType, file) {
   const formData = new FormData()
   formData.append('doc_type', docType)
