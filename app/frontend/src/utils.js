@@ -107,3 +107,17 @@ export function isImage(contentType, name = '') {
   if (contentType && contentType.startsWith('image/')) return true
   return /\.(jpe?g|png|webp|gif)$/i.test(name)
 }
+
+/** Montant en francs CFA, avec des espaces comme séparateurs de milliers. */
+export function formatFcfa(amount) {
+  if (amount === null || amount === undefined) return null
+  return `${Number(amount).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ')} F`
+}
+
+/** Écart en pourcentage par rapport à l'offre ADOC, signe compris. */
+export function formatEcart(pct) {
+  if (pct === null || pct === undefined) return null
+  const rounded = Math.round(pct * 10) / 10
+  if (rounded === 0) return 'identique'
+  return `${rounded > 0 ? '+' : ''}${rounded.toLocaleString('fr-FR')} %`
+}

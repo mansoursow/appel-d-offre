@@ -153,8 +153,39 @@ Tout est en base, rien n'est perdu au redémarrage :
 | Chaque connexion et déconnexion | table `activity_logs` | admin (*Journal d'activité*) |
 | Changements de mot de passe, avis retenus/écartés, dépôts de fichiers, collectes | table `activity_logs` | admin |
 | Photos de journaux, offres technique et financière | `/var/data/uploads` | selon le rôle |
+| Prix proposés par ADOC et ses concurrents sur les marchés passés | tables `price_markets` / `price_offers` | tous les profils (*Historique des prix*) |
 
 Les sessions durent 12 heures, puis la reconnexion est demandée.
+
+### Mettre à jour l'historique des prix
+
+L'onglet *Historique des prix* est alimenté par le classeur « Tableau des MI
+et PTF ». Seules les lignes dont la colonne **Prix des participants (TTC)**
+est remplie y figurent : sans montant, la ligne n'apprend rien sur ce que
+pratiquent les concurrents.
+
+Chaque marché est rangé dans une **nature** (commissariat aux comptes, plan
+stratégique de développement, audit de projet, audit organisationnel…) déduite
+de son objet, parce que des prix ne se comparent qu'entre marchés de même
+nature. La liste des natures et leurs mots-clés sont dans `config.py`
+(`MARKET_NATURES`) ; l'ordre compte, la première nature dont un mot-clé
+apparaît dans l'objet l'emporte. La nature est recalculée à chaque lecture :
+ajuster les mots-clés reclasse aussitôt tout l'historique, sans réimport.
+
+Deux façons de le rafraîchir, au choix :
+
+- **depuis l'application** — onglet *Historique des prix*, en bas, section
+  *Mettre à jour depuis le classeur* (administrateur uniquement). Le classeur
+  envoyé **remplace** l'intégralité de l'historique ;
+- **depuis le dépôt** — régénérer le fichier d'amorçage puis le committer :
+
+```bash
+cd app/backend && python tools/import_prix_reference.py "chemin/vers/Tableau des MI ET PTF- ADOC.xlsx"
+```
+
+`app/data/prix_reference.json` est rechargé à chaque démarrage, mais seuls les
+marchés absents de la base sont ajoutés : un classeur plus récent envoyé
+depuis l'application n'est jamais écrasé par un redéploiement.
 
 ## 7. Sauvegardes
 

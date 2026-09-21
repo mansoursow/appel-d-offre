@@ -263,3 +263,24 @@ export function createUser(payload) {
 export function updateUser(userId, payload) {
   return request(`/api/admin/users/${userId}`, { method: 'PATCH', body: payload })
 }
+
+// --------------------------------------------------------------------------
+// Historique des prix (marchés passés)
+// --------------------------------------------------------------------------
+export function fetchPriceHistory({ search, annee, methode, nature, issue } = {}) {
+  const params = new URLSearchParams()
+  if (search) params.set('search', search)
+  if (annee) params.set('annee', annee)
+  if (methode) params.set('methode', methode)
+  if (nature) params.set('nature', nature)
+  if (issue) params.set('issue', issue)
+  const query = params.toString()
+  return request(`/api/prix${query ? `?${query}` : ''}`)
+}
+
+/** Remplace tout l'historique par le contenu d'un nouveau classeur (admin). */
+export function importPriceWorkbook(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request('/api/prix/import', { method: 'POST', formData })
+}

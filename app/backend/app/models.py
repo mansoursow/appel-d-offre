@@ -240,3 +240,59 @@ class ActivityLog(Base):
     target_id = Column(Integer, nullable=True)
     detail = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+# ---------------------------------------------------------------------------
+# Historique des prix : ce que le cabinet et ses concurrents ont propose
+# ---------------------------------------------------------------------------
+
+
+class PriceMarket(Base):
+    """Un marche passe pour lequel on connait les prix proposes.
+
+    Alimente par le classeur "Tableau des MI et PTF" (voir price_import.py).
+    Seuls les marches dont au moins un montant est connu sont enregistres :
+    sans prix, la ligne n'apprend rien sur les pratiques des concurrents.
+    """
+
+    __tablename__ = "price_markets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    # Empreinte stable (annee + objet) : reimporter le classeur met a jour la
+    # ligne existante au lieu de creer un doublon.
+    cle = Column(String(40), unique=True, index=True, nullable=False)
+
+    annee = Column(Integer, nullable=False, index=True)
+    date = Column(String(10), nullable=True, index=True)   # "YYYY-MM-DD" du depot
+    objet = Column(Text, nullable=False)
+    structure = Column(Text, nullable=True)                # l'autorite contractante
+    methode = Column(Text, nullable=True)                  # moindre cout, qualite/cout...
+    attributaire = Column(Text, nullable=True)             # qui a emporte le marche
+    observations = Column(Text, nullable=True)
+    participants_bruts = Column(Text, nullable=True)       # liste telle que saisie
+
+    imported_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    offres = relationship(
+        "PriceOffer", back_populates="marche", cascade="all, delete-orphan",
+        order_by="PriceOffer.id",
+    )
+
+
+class PriceOffer(Base):
+    """Le prix propose par un participant sur un marche."""
+
+    __tablename__ = "price_offers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    market_id = Column(Integer, ForeignKey("price_markets.id"), index=True, nullable=False)
+
+    nom = Column(Text, nullable=False)              # nom tel qu'ecrit dans le classeur
+    cle = Column(String(200), nullable=False, index=True)  # nom normalise, pour regrouper
+    montant = Column(Integer, nullable=True)        # FCFA TTC ; NULL si illisible
+    montant_texte = Column(Text, nullable=True)     # texte d'origine (fourchettes, mentions)
+    note = Column(Integer, nullable=True)           # note technique, quand elle est connue
+    est_adoc = Column(Boolean, nullable=False, default=False, index=True)
+    est_attributaire = Column(Boolean, nullable=False, default=False, index=True)
+
+    marche = relationship("PriceMarket", back_populates="offres")

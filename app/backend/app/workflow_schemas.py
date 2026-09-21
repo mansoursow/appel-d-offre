@@ -263,3 +263,102 @@ class AdminDashboardOut(BaseModel):
     dossiers_incomplets: int
     dossiers_en_retard: int
     users_count: int
+
+
+# --------------------------------------------------------------------------
+# Historique des prix (classeur des MI et PTF)
+# --------------------------------------------------------------------------
+class PriceOfferOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    nom: str
+    montant: Optional[int] = None          # FCFA TTC ; absent si la saisie est illisible
+    montant_texte: Optional[str] = None    # texte d'origine (fourchette, mention...)
+    note: Optional[int] = None             # note technique, quand elle est connue
+    est_adoc: bool = False
+    est_attributaire: bool = False
+    # Ecart en % par rapport a l'offre ADOC du meme marche (negatif = moins cher).
+    ecart_adoc_pct: Optional[float] = None
+
+
+class PriceMarketOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    annee: int
+    date: Optional[str] = None
+    objet: str
+    structure: Optional[str] = None
+    methode: Optional[str] = None
+    # Nature de la prestation : un CAC ne se compare pas a un PSD.
+    nature: str = "autre"
+    nature_label: str = "Autre prestation"
+    attributaire: Optional[str] = None
+    observations: Optional[str] = None
+    participants_bruts: Optional[str] = None
+    offres: list[PriceOfferOut] = []
+
+    montant_adoc: Optional[int] = None      # ce que le cabinet a propose
+    montant_gagnant: Optional[int] = None   # le prix de l'attributaire
+    adoc_gagnant: bool = False
+    # Rang du prix ADOC parmi les offres chiffrees (1 = le moins cher).
+    rang_adoc: Optional[int] = None
+    nb_offres_chiffrees: int = 0
+    montant_moins_disant: Optional[int] = None   # l'offre la plus basse du marche
+    adoc_moins_disant: bool = False              # ... et c'etait la notre
+
+
+class CompetitorStatOut(BaseModel):
+    """Ce qu'un concurrent propose d'habitude, compare a ADOC."""
+
+    nom: str
+    marches: int                            # rencontres avec un prix connu
+    victoires: int
+    montant_min: Optional[int] = None
+    montant_max: Optional[int] = None
+    montant_median: Optional[int] = None
+    # Moyenne des ecarts avec ADOC sur les marches ou les deux prix sont connus.
+    comparaisons: int = 0
+    ecart_moyen_pct: Optional[float] = None
+    moins_cher_que_adoc: int = 0
+
+
+class NatureOptionOut(BaseModel):
+    """Une nature de marche proposee au filtrage, avec son effectif."""
+
+    code: str
+    label: str
+    marches: int
+
+
+class NatureBenchmarkOut(BaseModel):
+    """Repere de prix pour une nature de marche.
+
+    Repond a la question : sur ce type de prestation, a quel niveau faut-il
+    chiffrer pour etre le moins-disant ? Les montants ne sont comparables
+    qu'a l'interieur d'une meme nature -- un commissariat aux comptes et un
+    plan strategique n'ont pas la meme echelle de prix.
+    """
+
+    code: str
+    label: str
+    marches: int                             # marches de cette nature
+    marches_compares: int                    # dont au moins deux prix connus
+    adoc_median: Optional[int] = None        # ce que nous proposons d'habitude
+    concurrent_min: Optional[int] = None     # l'offre concurrente la plus basse vue
+    concurrent_median: Optional[int] = None
+    # Mediane du prix le plus bas de chaque marche : le niveau a battre.
+    moins_disant_median: Optional[int] = None
+    fois_moins_disant: int = 0               # marches ou notre offre etait la plus basse
+    victoires: int = 0                       # marches remportes par ADOC
+
+
+class PriceHistoryOut(BaseModel):
+    marches: list[PriceMarketOut]
+    concurrents: list[CompetitorStatOut]
+    reperes: list[NatureBenchmarkOut]
+    annees: list[int]
+    methodes: list[str]
+    natures: list[NatureOptionOut]
+    total_marches: int          # avant filtrage, pour situer le sous-ensemble affiche
+    marches_gagnes: int         # parmi les marches affiches

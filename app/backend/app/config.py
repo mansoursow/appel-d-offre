@@ -359,3 +359,90 @@ def is_relevant_to_activity(*text_parts: str) -> bool:
     if not haystack:
         return False
     return any(pattern.search(haystack) for pattern in _ACTIVITY_PATTERNS)
+
+
+# ===========================================================================
+# NATURE DU MARCHE — indispensable pour comparer des prix comparables
+# ===========================================================================
+# Un commissariat aux comptes (CAC) ne se chiffre pas comme un plan
+# strategique de developpement (PSD) : comparer les prix de tous les marches
+# entre eux n'a aucun sens. Chaque marche de l'historique des prix est donc
+# range dans une nature, deduite de son objet, et les reperes de prix sont
+# calcules nature par nature.
+#
+# L'ordre compte : la PREMIERE nature dont un mot-cle apparait dans l'objet
+# l'emporte. Les natures les plus specifiques sont donc placees en premier
+# ("audit des marches publics" avant "audit organisationnel", qui vient lui
+# meme avant le generique "audit financier"). Pour affiner le classement, il
+# suffit de deplacer une nature ou de lui ajouter un mot-cle.
+MARKET_NATURES = [
+    ("cac", "Commissariat aux comptes (CAC)", [
+        "commissaire aux comptes", "commissariat aux comptes",
+        "certification des etats financiers", "certification des comptes",
+        "certification du compte",
+    ]),
+    ("psd", "Plan stratégique de développement (PSD)", [
+        "plan strategique", "planification strategique", "strategie de developpement",
+        "plan de developpement", "psd", "plan d'orientation",
+    ]),
+    ("audit_marches", "Audit des marchés publics", [
+        "marches publics", "passation des marches", "partenariat public-prive",
+        "ppp", "revue independante de la conformite",
+    ]),
+    ("audit_performance", "Audit de performance", [
+        "audit de la performance", "audit de performance", "audit de gestion",
+    ]),
+    ("audit_organisationnel", "Audit organisationnel et RH", [
+        "audit organisationnel", "audit institutionnel", "audit organisation",
+        "audit social", "ressources humaines", "organisationnel", "diagnostic organisationnel",
+    ]),
+    ("audit_projet", "Audit financier et comptable de projet", [
+        "audit financier", "audit comptable", "audit des comptes", "audit du projet",
+        "audit des projets", "audit du fonds", "audit technique et financier",
+        "audit annuel", "audit des etats financiers", "commissariat aux apports",
+    ]),
+    ("controle", "Vérification, enquête et contrôle", [
+        "verification", "enquete", "revue independante", "controle", "inspection",
+    ]),
+    ("comptabilite", "Assistance comptable et états financiers", [
+        "assistance comptable", "accompagnement comptable", "tenue de comptabilite",
+        "elaboration des etats financiers", "expertise comptable",
+    ]),
+    ("formation", "Formation", [
+        "formation", "renforcement de capacites", "renforcement des capacites",
+    ]),
+    ("evaluation", "Évaluation et étude", [
+        "etude de marche", "evaluation", "etude", "diagnostic", "enquete de satisfaction",
+    ]),
+    ("rapport", "Élaboration de rapport", [
+        "elaboration du rapport", "redaction du rapport", "rapport itie",
+    ]),
+    ("conseil", "Conseil et assistance technique", [
+        "assistance technique", "accompagnement", "conseil", "mise en place d'un systeme",
+    ]),
+]
+
+NATURE_AUTRE = "autre"
+NATURE_AUTRE_LABEL = "Autre prestation"
+
+NATURE_LABELS = {code: label for code, label, _keywords in MARKET_NATURES}
+NATURE_LABELS[NATURE_AUTRE] = NATURE_AUTRE_LABEL
+
+_NATURE_PATTERNS = [
+    (code, [_re.compile(r"\b" + _re.escape(_normalize_activity_text(kw))) for kw in keywords])
+    for code, _label, keywords in MARKET_NATURES
+]
+
+
+def market_nature(*text_parts: str) -> str:
+    """Nature d'un marche deduite de son objet. "autre" si rien ne correspond."""
+    haystack = _normalize_activity_text(" ".join(p for p in text_parts if p))
+    if haystack:
+        for code, patterns in _NATURE_PATTERNS:
+            if any(pattern.search(haystack) for pattern in patterns):
+                return code
+    return NATURE_AUTRE
+
+
+def market_nature_label(code: str) -> str:
+    return NATURE_LABELS.get(code, NATURE_AUTRE_LABEL)

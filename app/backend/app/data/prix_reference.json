@@ -1,0 +1,828 @@
+{
+ "source": "Copie de Tableau des MI ET PTF- ADOC.xlsx",
+ "marches": [
+  {
+   "cle": "61f419afa4e92a5c",
+   "annee": 2024,
+   "date": "2024-01-25",
+   "objet": "Appel à candidature pour l'audit des projets d'infrastructures médicales",
+   "structure": "FONSIS",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposé le 25/01/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 27140000,
+     "montant_texte": "27 140 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "b000d21f3dc009bd",
+   "annee": 2024,
+   "date": "2024-01-29",
+   "objet": "Demande de renseignements et de prix N° C_ONRAC_04 / Recrutement d'un commissaire aux comptes",
+   "structure": "ONRAC",
+   "methode": "Moindre coût",
+   "attributaire": "ADOC",
+   "observations": "Déposé le 29/01/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 7552000,
+     "montant_texte": "7 552 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "6ec520360b48ac03",
+   "annee": 2024,
+   "date": "2024-02-01",
+   "objet": "DP Audit des comptes du projet d'Appui et de valorisation des initiatives entrepreneuriales des femmes et des jeunes (PAVIE) pour les exercices 2023 -2024, plus la période complémentaire",
+   "structure": null,
+   "methode": "Moindre coût",
+   "attributaire": "FOCUS",
+   "observations": "Déposé le 01/02/2024",
+   "participants_bruts": "ADOC-ABX-FOCUS",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 7670000,
+     "montant_texte": "7 670 000",
+     "montant_incertain": false,
+     "note": 95,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "ABX",
+     "cle": "ABX",
+     "montant": 9322000,
+     "montant_texte": "9 322 000",
+     "montant_incertain": false,
+     "note": 86,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "FOCUS",
+     "cle": "FOCUS",
+     "montant": 6844000,
+     "montant_texte": "6 844 000",
+     "montant_incertain": false,
+     "note": 95,
+     "est_adoc": false,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "68ca2e3e7347f218",
+   "annee": 2024,
+   "date": "2024-02-29",
+   "objet": "Etude de marché sur la demande de logements à travers le sénégal",
+   "structure": "SN HLM",
+   "methode": "Moindre coût",
+   "attributaire": "SOTERCO",
+   "observations": "Déposé le 29/02/2024",
+   "participants_bruts": "ADOC-PRESTIGE-SOTERCO",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 8850000,
+     "montant_texte": "8 850 000 (minimum); 24 780 000 (maximum)",
+     "montant_incertain": false,
+     "note": 91,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "PRESTIGE",
+     "cle": "PRESTIGE",
+     "montant": 153900000,
+     "montant_texte": "153 900 000",
+     "montant_incertain": false,
+     "note": 90,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "SOTERCO",
+     "cle": "SOTERCO",
+     "montant": 26685000,
+     "montant_texte": "26 685 000",
+     "montant_incertain": false,
+     "note": 91,
+     "est_adoc": false,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "ab162fe5b6e56b08",
+   "annee": 2024,
+   "date": "2024-05-02",
+   "objet": "DRPCR sélection d'un cabinet pour l'organisation de sessions de formation en comptabilité au profit du personnel de la DA (acte uniforme relatif au système comptable des entités à bot non lucratif)",
+   "structure": "PAVIE / DER",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposée le 02/05/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 4956000,
+     "montant_texte": "4 956 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "c8fd435020074920",
+   "annee": 2024,
+   "date": "2024-07-24",
+   "objet": "Demande de renseignements et de Prix à Compétiton ouverte (DRPCO) pour le recrutement d'un consultant en vue de l'audit organisationnel et des ressources humaines de la société AIBD SA - C_AIBD_24-057",
+   "structure": "AIBD",
+   "methode": "Budget déterminé à 50.000.000 F CFA TTC",
+   "attributaire": "Mazars",
+   "observations": "Déposée le 24/07/2024",
+   "participants_bruts": "ADOC-Mazars-\nOsmose-\nPerformances Group-CMPG-Afrique management Conseil-MAX Consulting Groupecrowe-Formarecut-Cabinet Prestige-Manager et Consultants Associés",
+   "offres": [
+    {
+     "nom": "Mazars",
+     "cle": "MAZARS",
+     "montant": 49796000,
+     "montant_texte": "49 796 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 49914000,
+     "montant_texte": "49 914 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "119b5af8349effb6",
+   "annee": 2024,
+   "date": "2024-07-25",
+   "objet": "Elaboration du rapport ITIE 2023 et semestre 2024 du sénégal",
+   "structure": "Initiative pour la transparence dans les industries Extractives (ITIE)",
+   "methode": "Qualité/coût",
+   "attributaire": "Groupement Enerteam-CECA",
+   "observations": "Déposée le 25/07/2024",
+   "participants_bruts": "Groupement Enerteam-CECA/Cabinet TEC/ADOC/Mazars/G&G MBA/Face Africa",
+   "offres": [
+    {
+     "nom": "Groupement ENERTEAM-CECA",
+     "cle": "GROUPEMENT ENERTEAM CECA",
+     "montant": 44131408,
+     "montant_texte": "44 131 408",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 14750000,
+     "montant_texte": "14 750 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "ea720a35bd8f42d4",
+   "annee": 2024,
+   "date": "2024-07-26",
+   "objet": "Demande de renseignements et de prix à compétiton ouverte (DRPCO) pour le recrutement d'un consultant en vue de l'audit des marchés publics et contrats de partenariat public-privé (PPP) de la société AIBD - C_AIBD_24-058",
+   "structure": "AIBD",
+   "methode": "Budget déterminé à 50.000.000 F CFA TTC",
+   "attributaire": "BSC",
+   "observations": "Déposée le 26/07/2024",
+   "participants_bruts": "ADOC-BSC-CMC-Grant Thornton-SSPM-GIC/AIC/BAC",
+   "offres": [
+    {
+     "nom": "BSC",
+     "cle": "BSC",
+     "montant": 50000000,
+     "montant_texte": "50 000 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 49914000,
+     "montant_texte": "49 914 000 F",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "daabc95b1684f30a",
+   "annee": 2024,
+   "date": "2024-08-06",
+   "objet": "DP N° C_DODP_351 Sélection de consultants pour services d'audit financier et comptable du Projet de construction de l'autoroute dakar-tivaouane-saint louis, section louga-gandon",
+   "structure": "DODP",
+   "methode": "Moindre coût",
+   "attributaire": "ADOC",
+   "observations": "Déposée le 06/08/2024",
+   "participants_bruts": "ADOC-ABX-Grant Thornton",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 14160000,
+     "montant_texte": "14 160 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    },
+    {
+     "nom": "ABX",
+     "cle": "ABX",
+     "montant": 29559000,
+     "montant_texte": "29 559 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "Grant Thornton",
+     "cle": "GRANT THORNTON",
+     "montant": 21647100,
+     "montant_texte": "21 647 100",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "dde9944c9c4a6d9d",
+   "annee": 2024,
+   "date": "2024-08-06",
+   "objet": "Sélection de cabinets pour l'éxecution de missions de vérification et d'enquête: FSE",
+   "structure": "IGE",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposée le 06/08/2024",
+   "participants_bruts": "ADOC-Cafex & Crystal-SCC GA2C-AUDITEX-Tresaudit-West Africa-CMC-KOF-CADG-AXAUDIT-GENIUS-RAM",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 29500000,
+     "montant_texte": "29 500 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    },
+    {
+     "nom": "Cafex & Crystal",
+     "cle": "CAFEX & CRYSTAL",
+     "montant": 23576400,
+     "montant_texte": "23 576 400",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "SCC GA2C",
+     "cle": "SCC GA2C",
+     "montant": 38232000,
+     "montant_texte": "38 232 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "AUDITEX-Tresaudit-West Africa",
+     "cle": "AUDITEX TRESAUDIT WEST AFRICA",
+     "montant": 29877600,
+     "montant_texte": "29 877 600",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "CMC",
+     "cle": "CMC",
+     "montant": 47200000,
+     "montant_texte": "47 200 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "KOF",
+     "cle": "KOF",
+     "montant": 11304400,
+     "montant_texte": "11 304 400",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "CADG",
+     "cle": "CADG",
+     "montant": 15825000,
+     "montant_texte": "15 825 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "AXAUDIT",
+     "cle": "AXAUDIT",
+     "montant": 23010000,
+     "montant_texte": "23 010 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "GENIUS",
+     "cle": "GENIUS",
+     "montant": 21240000,
+     "montant_texte": "21 240 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "RAM",
+     "cle": "RAM",
+     "montant": 65065200,
+     "montant_texte": "65 065 200",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "4eab98b366125f44",
+   "annee": 2024,
+   "date": "2024-08-06",
+   "objet": "Sélection de cabinets pour l'éxecution de missions de vérification et d'enquête: SAR",
+   "structure": "IGE",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposée le 06/08/2024",
+   "participants_bruts": "ADOC-Gaye & Associés-ECA-NCA-AXE Audit & Expertises-Osmose-CECA-RAM-\nMTD-Mané THIAM",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 47200000,
+     "montant_texte": "47 200 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    },
+    {
+     "nom": "Gaye & Associés",
+     "cle": "GAYE & ASSOCIES",
+     "montant": 31305400,
+     "montant_texte": "31 305 400",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "ECA-NCA-AXE Audit & Expertises",
+     "cle": "ECA NCA AXE AUDIT & EXPERTISES",
+     "montant": 40031500,
+     "montant_texte": "40 031 500",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "Osmose",
+     "cle": "OSMOSE",
+     "montant": 72407790,
+     "montant_texte": "72 407 790",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "CECA",
+     "cle": "CECA",
+     "montant": 82600000,
+     "montant_texte": "82 600 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "RAM",
+     "cle": "RAM",
+     "montant": 83850800,
+     "montant_texte": "83 850 800",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "MTD-Mané THIAM",
+     "cle": "MTD MANE THIAM",
+     "montant": null,
+     "montant_texte": "134B440 000",
+     "montant_incertain": true,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "a00095656113e951",
+   "annee": 2024,
+   "date": "2024-08-13",
+   "objet": "SELECTION D'UN CABINET POUR L'AUDIT DE LA PERFORMANCE DE L'ANSD POUR L'EXERCICE 2023",
+   "structure": "ANSD",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposée le 13/08/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 3953000,
+     "montant_texte": "3 953 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "1af5705694e4d995",
+   "annee": 2024,
+   "date": "2024-08-14",
+   "objet": "Demande de propositions N°C_Daf_002 portant recrutement d'un cabinet pour l'audit organisation de l'ASEPEX",
+   "structure": "ASEPEX",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposée le 14/08/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 7080000,
+     "montant_texte": "7 080 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "778fceb20facb0fa",
+   "annee": 2024,
+   "date": "2024-08-29",
+   "objet": "Demande de Renseignements et de prix à compétition ouverte pour le recrutement de consultants en vue d'audits portant sur l'organisation, les ressources humaines, la situation financière et le patrimoine immobilier de la SNR en deux (2) lots divisibles: Lot 1: Audit organisationnel et des RH",
+   "structure": "Société Nationales de Recouvrement (SNR)",
+   "methode": "Moindre coût",
+   "attributaire": "AC Corporate",
+   "observations": "Déposée le 29/08/2024",
+   "participants_bruts": "ADOC-AC Corporate-FOCUS & Prester RHO",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 22420000,
+     "montant_texte": "22 420 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "AC Corporate",
+     "cle": "AC CORPORATE",
+     "montant": 20000000,
+     "montant_texte": "20 000 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "FOCUS & Prester RHO",
+     "cle": "FOCUS & PRESTER RHO",
+     "montant": 27140000,
+     "montant_texte": "27 140 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "4290dc47378c2831",
+   "annee": 2024,
+   "date": "2024-08-29",
+   "objet": "Demande de Renseignements et de prix à compétition ouverte pour le recrutement de consultants en vue d'audits portant sur l'organisation, les ressources humaines, la situation financière et le patrimoine immobilier de la SNR en deux (2) lots divisibles: Lot 2: Audit financier et du patrimoine immobilier",
+   "structure": "Société Nationales de Recouvrement (SNR)",
+   "methode": "Moindre coût",
+   "attributaire": "AC Corporate",
+   "observations": "Déposée le 29/08/2024",
+   "participants_bruts": "ADOC-AC Corporate-FOCUS & Prester RHO",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 22420000,
+     "montant_texte": "22 420 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "AC Corporate",
+     "cle": "AC CORPORATE",
+     "montant": 17000000,
+     "montant_texte": "17 000 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "FOCUS & Prester RHO",
+     "cle": "FOCUS & PRESTER RHO",
+     "montant": 226255000,
+     "montant_texte": "226 255 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "61b02d7c9435b00a",
+   "annee": 2024,
+   "date": "2024-09-30",
+   "objet": "DP N°: C_FHS_013 : Sélection d'un commissaire aux comptes pour la certification des états financiers du Fonds pour l'Habitat Social (FHS)",
+   "structure": "FHS",
+   "methode": "Qualité/coût",
+   "attributaire": "OSMOSE",
+   "observations": "2024-09-30 00:00:00",
+   "participants_bruts": "ADOC-OSMOSE",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 14160000,
+     "montant_texte": "14 160 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "OSMOSE",
+     "cle": "OSMOSE",
+     "montant": 19470000,
+     "montant_texte": "19 470 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "0da1f405101cf35f",
+   "annee": 2024,
+   "date": "2024-10-25",
+   "objet": "DP N° 01/PM/SGG/DAGE relative au recrutement d'un cabinet chargé de l'évaluation et de l'audit technique et financier du PDGI et du Projet d'assainissement de 10 villages au Sénégal",
+   "structure": "PRIMATURE",
+   "methode": "Qualité/coût",
+   "attributaire": "SenEngineering",
+   "observations": "Déposé le 25/10/2024",
+   "participants_bruts": "ADOC-SenEngineering-Groupement FIDECA-Hydrconcept",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 129800000,
+     "montant_texte": "129 800 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "SenEngineering",
+     "cle": "SENENGINEERING",
+     "montant": 81652000,
+     "montant_texte": "81 652 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "Groupement FIDECA-Hydrconcept",
+     "cle": "GROUPEMENT FIDECA HYDRCONCEPT",
+     "montant": 476484000,
+     "montant_texte": "476 484 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "ee8d5c72d4ea755c",
+   "annee": 2024,
+   "date": "2024-11-04",
+   "objet": "DP N° C_DODP_1510 - Audit du fonds additionnel du Projet Bus Rapid Transit (BRT) pour les exercices 2024 et 2025 (1er janvier au 30 avril 2025)",
+   "structure": "DODP",
+   "methode": "Qualité/coût",
+   "attributaire": "AMCS",
+   "observations": "Déposé le 04/11/2024",
+   "participants_bruts": "ADOC-AMCS-FIDECA-Grant Thornton",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 8260000,
+     "montant_texte": "8 260 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    },
+    {
+     "nom": "AMCS",
+     "cle": "AMCS",
+     "montant": 6032160,
+     "montant_texte": "6 032 160",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": true
+    },
+    {
+     "nom": "FIDECA",
+     "cle": "FIDECA",
+     "montant": 16785500,
+     "montant_texte": "16 785 500",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    },
+    {
+     "nom": "Grant Thornton",
+     "cle": "GRANT THORNTON",
+     "montant": 12000000,
+     "montant_texte": "12 000 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": false,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "711d634451667a18",
+   "annee": 2024,
+   "date": "2024-11-14",
+   "objet": "DRPCO pour le recrutement d'un consultant en vue de l'audit technique et financier du PUMA",
+   "structure": "Programme d'Urgence de Modernisation des axes et Territoires Frontaliers (PUMA)",
+   "methode": "Budget préderminé",
+   "attributaire": "Groupement BSC/CAFEC",
+   "observations": "Déposé le 14/11/2024",
+   "participants_bruts": "Groupement BSC/CAFEC\nGrant Thronton\nBaker Tilly\nGrpemt IAA & GT Inter Consultin\nADOC",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 49914000,
+     "montant_texte": "49 914 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": false
+    }
+   ]
+  },
+  {
+   "cle": "29e522e3f047b626",
+   "annee": 2024,
+   "date": "2024-11-28",
+   "objet": "DRP N°015_PUMA_2024 audit institutionnel et organisationnel du Programme d'Urgence de Modernisation des Axes et Territoires Frontaliers (PUMA)",
+   "structure": "PUMA",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposé le 28/11/2024",
+   "participants_bruts": null,
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 17700000,
+     "montant_texte": "17 700 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  },
+  {
+   "cle": "649b7836587e6ae0",
+   "annee": 2025,
+   "date": "2025-02-05",
+   "objet": "DRP N°023/2025/MHA/OLAC \" Sélection d'un cabinet pour l'audit organisationnel et social de l'OLAC \"",
+   "structure": "OLAC",
+   "methode": null,
+   "attributaire": "ADOC",
+   "observations": "Déposé le 05/02/2025",
+   "participants_bruts": "ADOC - CABINET DIENG - OSMOSE - ECC - EXTERNALYS",
+   "offres": [
+    {
+     "nom": "ADOC",
+     "cle": "ADOC",
+     "montant": 12980000,
+     "montant_texte": "12 980 000",
+     "montant_incertain": false,
+     "note": null,
+     "est_adoc": true,
+     "est_attributaire": true
+    }
+   ]
+  }
+ ]
+}

@@ -12,13 +12,13 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from . import config, notifications, scraper_service
+from . import config, notifications, price_service, scraper_service
 from .auth import get_current_user, log_activity, seed_default_users
 from .config import SOURCES, SOURCE_BY_ID
 from .database import Base, SessionLocal, engine, get_db, run_lightweight_migrations
 from .models import Tender
 from .routers import admin as admin_router
-from .routers import auth_routes, files, journal, selection
+from .routers import auth_routes, files, journal, prices, selection
 from .schemas import TenderListOut, TenderOut, SourceOut, RefreshSummaryOut
 
 Base.metadata.create_all(bind=engine)
@@ -32,6 +32,10 @@ with SessionLocal() as _session:
     # Recalcule la pertinence metier de tous les avis deja en base, pour que le
     # filtre "avis lies a notre activite" reflete toujours le profil courant.
     scraper_service.reclassify_relevance(_session)
+    # Historique des prix des marches passes (classeur des MI et PTF). Seuls
+    # les marches absents sont ajoutes : un classeur plus recent envoye par
+    # l'administrateur n'est pas ecrase au redeploiement.
+    price_service.seed_price_references(_session)
 
 # Dossier de stockage des fichiers envoyes (photos de journaux, offres).
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
@@ -61,6 +65,7 @@ app.include_router(auth_routes.router)
 app.include_router(journal.router)
 app.include_router(selection.router)
 app.include_router(files.router)
+app.include_router(prices.router)
 app.include_router(admin_router.router)
 
 
