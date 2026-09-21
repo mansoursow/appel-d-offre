@@ -162,10 +162,12 @@ PERSISTENT_STORAGE = not ON_RAILWAY or bool(os.environ.get("RAILWAY_VOLUME_MOUNT
 TOKEN_TTL_SECONDS = int(os.environ.get("TOKEN_TTL_SECONDS", 12 * 3600))
 
 # Jours ou l'assistante doit deposer les journaux du jour (0 = lundi ... 6 =
-# dimanche). Par defaut lundi -> samedi, la presse quotidienne ne paraissant
-# pas le dimanche. Modifiable via JOURNAL_WORKING_DAYS="0,1,2,3,4" par exemple.
+# dimanche). Par defaut lundi -> vendredi : le cabinet ne travaille ni le
+# samedi ni le dimanche, ces journees ne sont donc jamais signalees comme
+# manquantes. Modifiable via JOURNAL_WORKING_DAYS="0,1,2,3,4,5" par exemple
+# pour reintegrer le samedi.
 JOURNAL_WORKING_DAYS = [
-    int(d) for d in os.environ.get("JOURNAL_WORKING_DAYS", "0,1,2,3,4,5").split(",") if d.strip() != ""
+    int(d) for d in os.environ.get("JOURNAL_WORKING_DAYS", "0,1,2,3,4").split(",") if d.strip() != ""
 ]
 
 # Date de mise en service du suivi des journaux (AAAA-MM-JJ). Les journees

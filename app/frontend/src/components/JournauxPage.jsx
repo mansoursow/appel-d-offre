@@ -175,66 +175,6 @@ export default function JournauxPage({ user, onChanged }) {
         </section>
       )}
 
-      {compliance && (
-        <section className="card card-pad">
-          <div className="section-title">
-            <div>
-              <h2>Suivi des dépôts — 30 derniers jours</h2>
-              <p>
-                {user.role === 'assistante'
-                  ? 'Votre historique personnel.'
-                  : 'Historique de tous les comptes. Les journées en rouge sont restées sans dépôt.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="stat-grid" style={{ marginBottom: 16 }}>
-            <div className="stat stat-ok">
-              <div className="stat-value">{compliance.days_done}</div>
-              <div className="stat-label">journées déposées</div>
-            </div>
-            <div className={`stat${compliance.days_missing ? ' stat-alert' : ' stat-ok'}`}>
-              <div className="stat-value">{compliance.days_missing}</div>
-              <div className="stat-label">journées ouvrées manquantes</div>
-            </div>
-            <div className="stat">
-              <div className="stat-value">{compliance.completion_rate}%</div>
-              <div className="stat-label">taux de suivi</div>
-            </div>
-          </div>
-
-          <div className="day-list">
-            {compliance.days.map((day) => (
-              <div
-                key={day.date}
-                className={
-                  'day-row'
-                  + (day.done ? ' day-row-done' : '')
-                  + (day.is_missing ? ' day-row-missing' : '')
-                  + (!day.is_working_day && !day.done ? ' day-row-off' : '')
-                }
-              >
-                <span className="day-dot" />
-                <span className="day-label">
-                  <strong>{day.weekday} {formatDate(day.date)}</strong>{' '}
-                  <span>
-                    {day.done
-                      ? JOURNAL_STATUS_LABELS[day.status] + (day.photo_count ? ` (${day.photo_count})` : '')
-                      : day.is_missing
-                        ? 'Aucun dépôt — journée ouvrée'
-                        : day.is_working_day ? 'En attente' : 'Jour non ouvré'}
-                  </span>
-                </span>
-                <span className="day-meta">
-                  {day.user_name || ''}
-                  {day.submitted_at ? ` · ${formatDateTime(day.submitted_at)}` : ''}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="card card-pad">
         <div className="section-title">
           <div>
@@ -351,6 +291,66 @@ export default function JournauxPage({ user, onChanged }) {
           ))}
         </div>
       </section>
+
+      {compliance && (
+        <section className="card card-pad">
+          <div className="section-title">
+            <div>
+              <h2>Suivi des dépôts — 30 derniers jours</h2>
+              <p>
+                {user.role === 'assistante'
+                  ? 'Votre historique personnel.'
+                  : 'Historique de tous les comptes. Les journées en rouge sont restées sans dépôt.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="stat-grid" style={{ marginBottom: 16 }}>
+            <div className="stat stat-ok">
+              <div className="stat-value">{compliance.days_done}</div>
+              <div className="stat-label">journées déposées</div>
+            </div>
+            <div className={`stat${compliance.days_missing ? ' stat-alert' : ' stat-ok'}`}>
+              <div className="stat-value">{compliance.days_missing}</div>
+              <div className="stat-label">journées ouvrées manquantes</div>
+            </div>
+            <div className="stat">
+              <div className="stat-value">{compliance.completion_rate}%</div>
+              <div className="stat-label">taux de suivi</div>
+            </div>
+          </div>
+
+          <div className="day-list">
+            {compliance.days.map((day) => (
+              <div
+                key={day.date}
+                className={
+                  'day-row'
+                  + (day.done ? ' day-row-done' : '')
+                  + (day.is_missing ? ' day-row-missing' : '')
+                  + (!day.is_working_day && !day.done ? ' day-row-off' : '')
+                }
+              >
+                <span className="day-dot" />
+                <span className="day-label">
+                  <strong>{day.weekday} {formatDate(day.date)}</strong>{' '}
+                  <span>
+                    {day.done
+                      ? JOURNAL_STATUS_LABELS[day.status] + (day.photo_count ? ` (${day.photo_count})` : '')
+                      : day.is_missing
+                        ? 'Aucun dépôt — journée ouvrée'
+                        : day.is_working_day ? 'En attente' : 'Jour non ouvré'}
+                  </span>
+                </span>
+                <span className="day-meta">
+                  {day.user_name || ''}
+                  {day.submitted_at ? ` · ${formatDateTime(day.submitted_at)}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {pending && (
         <DecisionModal
