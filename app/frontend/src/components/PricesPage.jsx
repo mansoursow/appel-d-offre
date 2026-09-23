@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api.js'
-import { formatDate, formatEcart, formatFcfa } from '../utils.js'
+import { ADMIN_ROLES, formatDate, formatEcart, formatFcfa } from '../utils.js'
 
 /**
  * Historique des prix : marché par marché, ce que le cabinet a proposé et ce
@@ -24,7 +24,7 @@ export default function PricesPage({ user }) {
   const [nature, setNature] = useState('')
   const [issue, setIssue] = useState('')
 
-  const isAdmin = user.role === 'admin'
+  const isAdmin = ADMIN_ROLES.includes(user.role)
 
   const load = useCallback(async () => {
     setLoading(true)

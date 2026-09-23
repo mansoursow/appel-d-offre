@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import * as api from '../api.js'
 import {
-  CATEGORY_LABELS, DOSSIER_STATUS_LABELS, SELECTION_ROLES,
+  ADMIN_ROLES, CATEGORY_LABELS, DOSSIER_STATUS_LABELS, SELECTION_ROLES,
   deadlineHint, formatDate, formatDateTime, formatSize, userLabel,
 } from '../utils.js'
 
@@ -24,7 +24,8 @@ export default function DossiersPage({ user, onChanged }) {
   const [filter, setFilter] = useState('a_traiter')
   const [onlyMine, setOnlyMine] = useState(user.role === 'monteur')
 
-  const canUpload = user.role === 'monteur' || user.role === 'admin'
+  const isAdmin = ADMIN_ROLES.includes(user.role)
+  const canUpload = user.role === 'monteur' || isAdmin
   // Admin / sélection / superviseur peuvent confier (ou reconfier) un dossier.
   const canAssign = SELECTION_ROLES.includes(user.role)
   const [monteurs, setMonteurs] = useState([])
@@ -213,7 +214,7 @@ export default function DossiersPage({ user, onChanged }) {
         {visible.map((selection) => {
           const docsByType = new Map(selection.documents.map((d) => [d.doc_type, d]))
           const mine = selection.assigned_to_id === user.id
-          const editable = canUpload && selection.decision === 'retenu' && (mine || user.role === 'admin')
+          const editable = canUpload && selection.decision === 'retenu' && (mine || isAdmin)
 
           return (
             <article key={selection.id} className={`dossier-card dossier-${selection.dossier_status}`}>
@@ -248,7 +249,7 @@ export default function DossiersPage({ user, onChanged }) {
                       ? `${formatDate(selection.deadline_iso)} · ${deadlineHint(selection.days_left)}`
                       : 'Échéance non renseignée'}
                   </p>
-                  {user.role === 'admin' && (
+                  {isAdmin && (
                     <button
                       className="btn btn-ghost"
                       style={{ marginTop: 6 }}

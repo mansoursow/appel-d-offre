@@ -19,7 +19,7 @@ from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
 from .. import auth, notifications
-from ..config import ROLE_LABELS, ROLES, SOURCES
+from ..config import ADMIN_ROLES, ROLE_LABELS, ROLES, SOURCES
 from ..database import get_db
 from ..models import ActivityLog, Selection, SourceRun, Tender, User
 from ..scrapers.registry import ACTIVE_SCRAPERS_BY_ID
@@ -38,7 +38,8 @@ from .auth_routes import user_out
 
 router = APIRouter(prefix="/api/admin", tags=["administration"])
 
-admin_only = auth.require_roles("admin")
+# Administrateur + profils ayant les memes droits (voir config.ADMIN_ROLES).
+admin_only = auth.require_roles(*ADMIN_ROLES)
 
 
 @router.get("/dashboard", response_model=AdminDashboardOut)

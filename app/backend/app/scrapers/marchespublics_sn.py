@@ -6,13 +6,16 @@ blocs <table> : chaque ligne <tr> contient "DD/MM/YYYY : Titre" avec un lien
 vers le detail "index.php?option=com_loffres&task=txt&key=NNNNN".
 La date affichee sur l'accueil est la DATE LIMITE de depot.
 
-NB : le site est regulierement indisponible (connexion coupee par le serveur).
-Le scraper essaie https puis http ; en cas d'echec l'erreur est remontee
-proprement par scraper_service sans casser les autres sources.
+NB : le serveur est lent (14 a 18 s pour rendre la page d'accueil) et coupe
+parfois la connexion. Le scraper laisse donc un delai large et reessaie ; en
+cas d'echec l'erreur est remontee proprement par scraper_service sans casser
+les autres sources. HTTPS est tente en premier mais echoue en general
+(certificat), d'ou le repli HTTP.
 """
 from __future__ import annotations
 
 import re
+import time
 
 from bs4 import BeautifulSoup
 
@@ -20,6 +23,10 @@ from .base import BaseScraper, TenderItem
 
 HTTP_URL = "http://www.marchespublics.sn/"
 HTTPS_URL = "https://www.marchespublics.sn/"
+
+# Le serveur met 14 a 18 s a repondre : delai large et plusieurs tentatives.
+TIMEOUT = 75
+TENTATIVES = 3
 
 # Lien de detail d'un appel d'offres (&amp; deja decode par BeautifulSoup)
 AO_HREF_RE = re.compile(r"option=com_loffres.*task=txt.*key=(\d+)")
@@ -35,12 +42,17 @@ class MarchesPublicsSNScraper(BaseScraper):
     def fetch(self) -> list[TenderItem]:
         resp = None
         last_exc = None
-        for url in (HTTPS_URL, HTTP_URL):
-            try:
-                resp = self.get(url)
+        for essai in range(TENTATIVES):
+            for url in (HTTPS_URL, HTTP_URL):
+                try:
+                    resp = self.get(url, timeout=TIMEOUT)
+                    break
+                except Exception as exc:
+                    last_exc = exc
+            if resp is not None:
                 break
-            except Exception as exc:
-                last_exc = exc
+            if essai < TENTATIVES - 1:
+                time.sleep(3)
         if resp is None:
             raise RuntimeError(f"marchespublics.sn injoignable : {last_exc}")
 

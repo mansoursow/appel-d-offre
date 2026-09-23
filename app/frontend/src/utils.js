@@ -21,6 +21,10 @@ export const JOURNAL_STATUS_LABELS = {
 /** Profils autorisés à retenir ou écarter un avis (et à confier un dossier). */
 export const SELECTION_ROLES = ['admin', 'selectionneur', 'superviseur']
 
+/** Profils ayant les droits d'administration (doit refléter config.ADMIN_ROLES
+ *  côté serveur : c'est lui qui autorise réellement chaque action). */
+export const ADMIN_ROLES = ['admin', 'selectionneur', 'superviseur']
+
 /** « Nom complet (identifiant) » : le nom seul ne dit pas quel compte on choisit. */
 export function userLabel(user) {
   if (!user) return ''

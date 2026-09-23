@@ -7,6 +7,7 @@ import JournauxPage from './components/JournauxPage.jsx'
 import DossiersPage from './components/DossiersPage.jsx'
 import PricesPage from './components/PricesPage.jsx'
 import AdminPage from './components/AdminPage.jsx'
+import { ADMIN_ROLES } from './utils.js'
 import logo from './logo.png'
 import './index.css'
 
@@ -24,7 +25,7 @@ const TABS = [
   { key: 'journaux', label: 'Journaux papier', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'dossiers', label: 'Dossiers', roles: ['admin', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'prix', label: 'Historique des prix', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
-  { key: 'admin', label: 'Administration', roles: ['admin'] },
+  { key: 'admin', label: 'Administration', roles: ADMIN_ROLES },
 ]
 
 const DEFAULT_TAB = {
@@ -59,7 +60,7 @@ export default function App() {
   }, [])
 
   const loadDashboard = useCallback(() => {
-    if (user?.role !== 'admin') return
+    if (!ADMIN_ROLES.includes(user?.role)) return
     api.fetchAdminDashboard().then(setDashboard).catch(() => setDashboard(null))
   }, [user])
 

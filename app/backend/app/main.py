@@ -79,6 +79,7 @@ def public_config():
     """Reglages utiles au frontend (libelles des roles, jours ouvres...)."""
     return {
         "roles": config.ROLES,
+        "admin_roles": config.ADMIN_ROLES,
         "role_labels": config.ROLE_LABELS,
         "journal_working_days": config.JOURNAL_WORKING_DAYS,
         "doc_alert_days_before_deadline": config.DOC_ALERT_DAYS_BEFORE_DEADLINE,

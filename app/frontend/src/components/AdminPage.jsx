@@ -7,6 +7,7 @@ const ROLE_OPTIONS = [
   { value: 'admin', label: 'Administrateur' },
   { value: 'assistante', label: 'Assistante (journaux)' },
   { value: 'selectionneur', label: 'Sélection des avis' },
+  { value: 'superviseur', label: 'Superviseur' },
   { value: 'monteur', label: 'Montage des dossiers' },
 ]
 

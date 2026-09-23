@@ -242,7 +242,7 @@ def update_selection(
 def delete_selection(
     selection_id: int,
     db: Session = Depends(get_db),
-    current: User = Depends(auth.require_roles()),  # administrateur uniquement
+    current: User = Depends(auth.require_roles(*config.ADMIN_ROLES)),
 ):
     """Retire un dossier (decision prise par erreur, avis abandonne...).
 

@@ -45,7 +45,7 @@ def price_history(
 async def import_workbook(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user: User = Depends(auth.require_roles("admin")),
+    user: User = Depends(auth.require_roles(*config.ADMIN_ROLES)),
 ):
     """Remplace l'historique par le contenu du classeur des MI et PTF."""
     name = (file.filename or "").lower()

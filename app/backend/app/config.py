@@ -254,6 +254,12 @@ ROLE_LABELS = {
 # toujours acces). Sert cote back (require_roles) et de reference cote front.
 ROLES_CAN_SELECT = ["selectionneur", "superviseur"]
 
+# Profils ayant les memes droits que l'administrateur : supervision, gestion
+# des comptes, sources de la veille, retrait d'un dossier. Le profil affiche
+# reste distinct (utile dans le journal d'activite), seuls les droits sont
+# identiques.
+ADMIN_ROLES = ["admin", "selectionneur", "superviseur"]
+
 
 # ===========================================================================
 # PROFIL D'ACTIVITE DU CABINET — filtrage de pertinence de la veille
