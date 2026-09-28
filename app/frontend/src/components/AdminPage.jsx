@@ -416,6 +416,12 @@ function SourcesPanel() {
                 <tr key={source.id}>
                   <td>
                     <strong>{source.name}</strong>
+                    {source.collecte === 'relais_local' && (
+                      <span className="badge badge-outline" style={{ marginLeft: 6 }}
+                            title="Ce site n'accepte que les connexions venant du Sénégal : la collecte est faite par le poste de Dakar, pas par le serveur.">
+                        relais local
+                      </span>
+                    )}
                     <div>
                       <a href={source.url} target="_blank" rel="noreferrer" className="muted">
                         {source.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}

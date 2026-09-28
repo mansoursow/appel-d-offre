@@ -241,6 +241,9 @@ class SourceHealthOut(BaseModel):
     url: str
     zone: str
     has_scraper: bool
+    # "serveur" (collecte faite par l'hebergeur) ou "relais_local" (site
+    # injoignable depuis l'hebergeur : un poste a Dakar depose les avis).
+    collecte: str = "serveur"
     tender_count: int = 0        # avis en base, toutes dates confondues
     relevant_count: int = 0      # dont lies a l'activite du cabinet
     open_count: int = 0          # dont date limite non depassee (ou inconnue)

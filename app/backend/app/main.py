@@ -18,7 +18,7 @@ from .config import SOURCES, SOURCE_BY_ID
 from .database import Base, SessionLocal, engine, get_db, run_lightweight_migrations
 from .models import Tender
 from .routers import admin as admin_router
-from .routers import auth_routes, files, journal, prices, selection
+from .routers import auth_routes, files, ingest, journal, prices, selection
 from .schemas import TenderListOut, TenderOut, SourceOut, RefreshSummaryOut
 
 Base.metadata.create_all(bind=engine)
@@ -66,6 +66,7 @@ app.include_router(journal.router)
 app.include_router(selection.router)
 app.include_router(files.router)
 app.include_router(prices.router)
+app.include_router(ingest.router)
 app.include_router(admin_router.router)
 
 

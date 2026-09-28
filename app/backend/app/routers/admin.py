@@ -139,7 +139,8 @@ def sources_health(db: Session = Depends(get_db), current: User = Depends(admin_
         run = runs.get(sid)
         has_scraper = sid in ACTIVE_SCRAPERS_BY_ID
 
-        if not has_scraper:
+        relais = source.get("status") == "relais_local"
+        if not has_scraper and not relais:
             health = "sans_scraper"
         elif run is None:
             # Avis collectes avant la mise en place de ce suivi : on s'en tient a la base.
@@ -154,6 +155,7 @@ def sources_health(db: Session = Depends(get_db), current: User = Depends(admin_
         out.append(SourceHealthOut(
             id=sid, name=source["name"], url=source["url"], zone=source["zone"],
             has_scraper=has_scraper,
+            collecte="relais_local" if relais else "serveur",
             tender_count=total, relevant_count=relevant, open_count=opened,
             last_item_at=last_item_at,
             last_run_at=run.last_run_at if run else None,

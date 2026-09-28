@@ -74,10 +74,14 @@ SOURCES = [
     # Agrege aussi le portail officiel marchespublics.sn (utile quand il est en panne).
     {"id": "marchesdusenegal", "name": "Marche du Senegal", "url": "https://marchesdusenegal.com/",
      "zone": "senegal", "status": "active"},
-    # Portail officiel : serveur regulierement indisponible (connexions coupees).
-    # Le scraper est pret et remontera les avis des que le site repond.
+    # Portail officiel : le serveur n'accepte que les connexions venant du
+    # Senegal (verifie le 28/09/2026 depuis 12 pays : connexion refusee
+    # partout). L'application etant hebergee en Europe, elle ne peut pas
+    # l'interroger : la collecte est faite par le relais local installe a
+    # Dakar (app/backend/collect_local.py), qui depose les avis via
+    # /api/ingest/marchespublics_sn.
     {"id": "marchespublics_sn", "name": "Marche public Senegal", "url": "http://www.marchespublics.sn/",
-     "zone": "senegal", "status": "active"},
+     "zone": "senegal", "status": "relais_local"},
     {"id": "adepme", "name": "Senegal PME (ADEPME)", "url": "https://marches.senegalpme.sn/",
      "zone": "senegal", "status": "active"},
     {"id": "j360", "name": "J360", "url": "https://www.j360.info/",
@@ -219,6 +223,11 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+# Jeton partage du relais local (routers/ingest.py) : le poste qui collecte
+# depuis Dakar doit presenter ce jeton pour deposer des avis. Vide = relais
+# ferme. Le generer avec : python -c "import secrets; print(secrets.token_urlsafe(32))"
+INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "")
+
 # Adresse du site, pour le lien "ouvrir le dossier" des e-mails.
 APP_PUBLIC_URL = os.environ.get("APP_PUBLIC_URL", "https://app.adoc-consulting.com").rstrip("/")
 

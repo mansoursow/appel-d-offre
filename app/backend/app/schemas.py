@@ -53,3 +53,26 @@ class RefreshSummaryOut(BaseModel):
     started_at: datetime
     finished_at: datetime
     results: list[RefreshResultOut]
+
+
+# ---------------------------------------------------------------------------
+# Relais local (voir routers/ingest.py)
+# ---------------------------------------------------------------------------
+class IngestItemIn(BaseModel):
+    """Un avis envoye par le relais local."""
+
+    title: str
+    url: Optional[str] = None
+    entity: Optional[str] = None
+    category: Optional[str] = None
+    country: Optional[str] = None
+    zone: Optional[str] = None
+    published_date: Optional[str] = None
+    deadline_date: Optional[str] = None
+    description: Optional[str] = None
+    # Cle de dedoublonnage produite par le scraper ; recalculee si absente.
+    dedupe_key: Optional[str] = None
+
+
+class IngestIn(BaseModel):
+    items: list[IngestItemIn] = []

@@ -10,3 +10,6 @@ tenders.db
 
 __pycache__/
 *.pyc
+
+# Jeton du relais local (voir collect_local.py)
+.ingest_token

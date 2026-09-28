@@ -17,7 +17,9 @@ from .dgmp_mali import DgmpMaliScraper
 from .boad import BoadScraper
 from .isdb import IsdbScraper
 from .bceao import BceaoScraper
-from .marchespublics_sn import MarchesPublicsSNScraper
+# MarchesPublicsSNScraper n'est PAS dans ACTIVE_SCRAPERS : le site refuse les
+# connexions hors Senegal. Il est utilise par le relais local (collect_local.py).
+from .marchespublics_sn import MarchesPublicsSNScraper  # noqa: F401 (relais local)
 from .lesoleil import LeSoleilScraper
 from .marchesdusenegal import MarchesDuSenegalScraper
 from .adepme import AdepmeScraper
@@ -44,7 +46,6 @@ ACTIVE_SCRAPERS = [
     BoadScraper(),
     IsdbScraper(),
     BceaoScraper(),
-    MarchesPublicsSNScraper(),
     LeSoleilScraper(),
     MarchesDuSenegalScraper(),
     AdepmeScraper(),

@@ -63,7 +63,7 @@ def parse_deadline_to_iso(deadline_text: str | None) -> str | None:
         return None
 
 
-def _record_run(db: Session, result: RefreshResultOut) -> None:
+def record_run(db: Session, result: RefreshResultOut) -> None:
     """Memorise le resultat de la collecte pour la page "Sources" de l'admin."""
     now = datetime.now(timezone.utc)
     run = db.get(SourceRun, result.source_id)
@@ -82,10 +82,13 @@ def _record_run(db: Session, result: RefreshResultOut) -> None:
 
 def run_scraper(db: Session, source_id: str) -> RefreshResultOut:
     result = _run_scraper(db, source_id)
-    try:
-        _record_run(db, result)
-    except Exception:  # le suivi ne doit jamais faire echouer la collecte
-        db.rollback()
+    # Une source confiee au relais local garde la trace de SA derniere collecte :
+    # un "Tout relancer" lance depuis le serveur ne doit pas l'ecraser.
+    if SOURCE_BY_ID.get(source_id, {}).get("status") != "relais_local":
+        try:
+            record_run(db, result)
+        except Exception:  # le suivi ne doit jamais faire echouer la collecte
+            db.rollback()
     return result
 
 
@@ -95,6 +98,11 @@ def _run_scraper(db: Session, source_id: str) -> RefreshResultOut:
     name = meta.get("name", source_id)
 
     if not scraper:
+        if meta.get("status") == "relais_local":
+            return RefreshResultOut(
+                source_id=source_id, source_name=name, status="skipped",
+                error="Site injoignable depuis l'hebergeur : collecte assuree par le relais local.",
+            )
         return RefreshResultOut(source_id=source_id, source_name=name, status="skipped",
                                  error="Aucun scraper actif pour cette source (placeholder).")
     try:
@@ -103,6 +111,12 @@ def _run_scraper(db: Session, source_id: str) -> RefreshResultOut:
         return RefreshResultOut(source_id=source_id, source_name=scraper.source_name,
                                  status="error", error=str(exc))
 
+    return save_items(db, source_id, scraper.source_name, tender_items)
+
+
+def save_items(db: Session, source_id: str, source_name: str, tender_items) -> RefreshResultOut:
+    """Enregistre (ou met a jour) une liste d'avis. Utilise aussi bien par la
+    collecte faite sur le serveur que par le relais local (routers/ingest.py)."""
     new_count = 0
     seen_keys: set[str] = set()
     for item in tender_items:
@@ -151,7 +165,7 @@ def _run_scraper(db: Session, source_id: str) -> RefreshResultOut:
 
     return RefreshResultOut(
         source_id=source_id,
-        source_name=scraper.source_name,
+        source_name=source_name,
         status="ok",
         new_items=new_count,
         total_found=len(tender_items),

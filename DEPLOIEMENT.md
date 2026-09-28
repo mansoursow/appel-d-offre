@@ -92,6 +92,7 @@ volume. Deux réglages restent recommandés (*Variables* dans le service) :
 |---|---|---|
 | `SECRET_KEY` | une chaîne aléatoire longue | Clé maîtrisée, indépendante du volume. La générer avec `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Si elle change, tout le monde est déconnecté. |
 | `TOKEN_TTL_SECONDS` | `43200` | Durée d'une session (12 h). |
+| `INGEST_TOKEN` | chaîne aléatoire longue | Jeton du **relais local**. Le portail `marchespublics.sn` n'accepte que les connexions venant du Sénégal : un poste à Dakar lance `collecte-locale.bat` et dépose les avis sur `/api/ingest`. Même valeur dans `app/backend/.ingest_token` sur ce poste. Vide = relais fermé. |
 | `BREVO_API_KEY` | clé API Brevo | E-mail au responsable du montage quand un avis est retenu. Railway Hobby bloque le SMTP : l'envoi passe par l'API Brevo. Domaine `adoc-consulting.com` authentifié chez Brevo (DKIM `brevo1`/`brevo2`). |
 | `EMAIL_FROM` | `Veille AO <veille@adoc-consulting.com>` | Expéditeur des notifications, sur le domaine authentifié. |
 
