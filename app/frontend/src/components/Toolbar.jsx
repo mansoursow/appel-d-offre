@@ -1,6 +1,18 @@
+/** Périodes proposées : valeur = nombre de jours en arrière depuis aujourd'hui. */
+export const PERIODS = [
+  { value: '', label: 'Toutes les périodes' },
+  { value: '7', label: 'Cette semaine (7 j)' },
+  { value: '30', label: 'Ce mois-ci (30 j)' },
+  { value: '90', label: 'Ce trimestre (3 mois)' },
+  { value: '182', label: 'Ce semestre (6 mois)' },
+  { value: '365', label: 'Cette année (12 mois)' },
+]
+
 export default function Toolbar({
   q, onQChange,
   category, onCategoryChange,
+  sources = [], sourceId, onSourceIdChange,
+  period, onPeriodChange,
   sort, onSortChange,
   hideExpired, onHideExpiredChange,
   hideDecided, onHideDecidedChange,
@@ -22,6 +34,33 @@ export default function Toolbar({
         <option value="appel_offre">Appels d'offres</option>
         <option value="ami">Avis à manifestation d'intérêt</option>
         <option value="autre">Autres avis</option>
+      </select>
+
+      <select
+        value={sourceId}
+        onChange={(e) => onSourceIdChange(e.target.value)}
+        className="select"
+        title="N'afficher que les avis d'un site précis"
+        aria-label="Filtrer par site"
+      >
+        <option value="">Tous les sites</option>
+        {sources.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}{s.tender_count ? ` (${s.tender_count})` : ''}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={period}
+        onChange={(e) => onPeriodChange(e.target.value)}
+        className="select"
+        title="Période de publication des avis"
+        aria-label="Filtrer par période"
+      >
+        {PERIODS.map((p) => (
+          <option key={p.value} value={p.value}>{p.label}</option>
+        ))}
       </select>
 
       <select

@@ -472,6 +472,9 @@ body {
   gap: 16px;
 }
 
+/* Un seul site choisi : la liste occupe toute la largeur. */
+.columns-single { grid-template-columns: minmax(0, 1fr); }
+
 @media (max-width: 900px) {
   .columns { grid-template-columns: minmax(0, 1fr); }
 }

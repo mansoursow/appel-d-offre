@@ -13,3 +13,6 @@ __pycache__/
 
 # Jeton du relais local (voir collect_local.py)
 .ingest_token
+
+# Etat du relais local : jour de la derniere collecte reussie.
+.ingest_state.json

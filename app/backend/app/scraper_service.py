@@ -127,6 +127,7 @@ def save_items(db: Session, source_id: str, source_name: str, tender_items) -> R
             continue
         seen_keys.add(item.dedupe_key)
         deadline_iso = parse_deadline_to_iso(item.deadline_date)
+        published_iso = parse_deadline_to_iso(item.published_date)
 
         is_relevant = config.is_relevant_to_activity(item.title, item.description)
 
@@ -138,6 +139,7 @@ def save_items(db: Session, source_id: str, source_name: str, tender_items) -> R
             existing.country = item.country
             existing.zone = item.zone
             existing.published_date = item.published_date
+            existing.published_iso = published_iso
             existing.deadline_date = item.deadline_date
             existing.deadline_iso = deadline_iso
             existing.url = item.url
@@ -154,6 +156,7 @@ def save_items(db: Session, source_id: str, source_name: str, tender_items) -> R
                 country=item.country,
                 zone=item.zone,
                 published_date=item.published_date,
+                published_iso=published_iso,
                 deadline_date=item.deadline_date,
                 deadline_iso=deadline_iso,
                 url=item.url,
@@ -204,6 +207,25 @@ def purge_obsolete_tenders(db: Session) -> int:
     if removed:
         db.commit()
     return removed
+
+
+def backfill_published_iso(db: Session) -> int:
+    """Renseigne published_iso pour les avis collectes avant l'ajout de cette
+    colonne. Sans cela, le filtre par periode les ignorerait tous."""
+    changed = 0
+    rows = (
+        db.query(Tender)
+        .filter(Tender.published_iso.is_(None), Tender.published_date.isnot(None))
+        .all()
+    )
+    for tender in rows:
+        iso = parse_deadline_to_iso(tender.published_date)
+        if iso:
+            tender.published_iso = iso
+            changed += 1
+    if changed:
+        db.commit()
+    return changed
 
 
 def purge_relay_source_runs(db: Session) -> int:

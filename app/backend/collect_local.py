@@ -10,9 +10,17 @@ Utilisation (depuis le dossier app/backend) :
 
     venv/Scripts/python.exe collect_local.py
 
+Le programme est prevu pour etre lance PLUSIEURS FOIS PAR JOUR (toutes les
+heures) : il note dans .ingest_state.json le jour de sa derniere reussite. Si
+la collecte du jour est deja faite, il s'arrete aussitot sans rien refaire.
+Tant qu'elle n'a pas reussi -- poste eteint, coupure Internet, site qui ne
+repond pas -- chaque lancement retente. On a donc au moins une mise a jour par
+jour des que la machine est allumee et connectee.
+
 Reglages, par variable d'environnement ou par fichier :
   APP_URL       adresse du site        (defaut https://app.adoc-consulting.com)
   INGEST_TOKEN  jeton du relais        (sinon lu dans le fichier .ingest_token)
+  --force       refait la collecte meme si elle a deja reussi aujourd'hui
 
 Le jeton doit etre IDENTIQUE a la variable INGEST_TOKEN configuree sur Railway.
 En cas d'echec, le programme renvoie un code de sortie different de zero et
@@ -20,9 +28,10 @@ ecrit la raison a l'ecran (visible dans le journal du planificateur Windows).
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
-from datetime import datetime
+from datetime import date, datetime
 
 import requests
 
@@ -39,6 +48,8 @@ RELAYED_SCRAPERS = {
 
 DEFAULT_APP_URL = "https://app.adoc-consulting.com"
 TOKEN_FILE = os.path.join(BASE_DIR, ".ingest_token")
+# Jour de la derniere collecte reussie, par source.
+STATE_FILE = os.path.join(BASE_DIR, ".ingest_state.json")
 
 
 def _log(message: str) -> None:
@@ -53,6 +64,25 @@ def _token() -> str:
         with open(TOKEN_FILE, encoding="utf-8") as handle:
             return handle.read().strip()
     return ""
+
+
+def _read_state() -> dict:
+    """Jour de la derniere collecte reussie, par source."""
+    try:
+        with open(STATE_FILE, encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def _mark_success(source_id: str) -> None:
+    state = _read_state()
+    state[source_id] = date.today().isoformat()
+    try:
+        with open(STATE_FILE, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, indent=2)
+    except OSError as exc:  # disque plein, dossier en lecture seule...
+        _log(f"impossible d'enregistrer l'etat du relais ({exc})")
 
 
 def collect(source_id: str, scraper, app_url: str, token: str) -> bool:
@@ -96,21 +126,39 @@ def collect(source_id: str, scraper, app_url: str, token: str) -> bool:
 
     data = resp.json()
     _log(f"{name} : {data['total_found']} avis envoyes, {data['new_items']} nouveau(x)")
+    _mark_success(source_id)
     return True
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    force = "--force" in argv
+
     app_url = os.environ.get("APP_URL", DEFAULT_APP_URL)
     token = _token()
     if not token:
         _log("Aucun jeton : renseigner INGEST_TOKEN ou le fichier .ingest_token")
         return 2
 
+    state = _read_state()
+    aujourd_hui = date.today().isoformat()
+    a_faire = {
+        sid: scraper for sid, scraper in RELAYED_SCRAPERS.items()
+        if force or state.get(sid) != aujourd_hui
+    }
+    if not a_faire:
+        # Cas le plus frequent quand la tache tourne toutes les heures : la
+        # collecte du jour est deja passee, on ne redemande rien au site.
+        _log("Collecte du jour deja faite, rien a refaire.")
+        return 0
+
     _log(f"Relais local vers {app_url}")
     echecs = 0
-    for source_id, scraper in RELAYED_SCRAPERS.items():
+    for source_id, scraper in a_faire.items():
         if not collect(source_id, scraper, app_url, token):
             echecs += 1
+    if echecs:
+        _log(f"{echecs} source(s) en echec : nouvelle tentative au prochain lancement.")
     return 1 if echecs else 0
 
 

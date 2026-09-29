@@ -104,7 +104,7 @@ export async function logout() {
 // --------------------------------------------------------------------------
 // Veille automatique
 // --------------------------------------------------------------------------
-export function fetchTenders({ zone, category, sourceId, q, onlyActive = true, relevantOnly = true, sort = 'deadline', page = 1, pageSize = 50 } = {}) {
+export function fetchTenders({ zone, category, sourceId, q, onlyActive = true, relevantOnly = true, publishedFrom, publishedTo, sort = 'deadline', page = 1, pageSize = 50 } = {}) {
   const params = new URLSearchParams()
   if (zone) params.set('zone', zone)
   if (category) params.set('category', category)
@@ -112,6 +112,8 @@ export function fetchTenders({ zone, category, sourceId, q, onlyActive = true, r
   if (q) params.set('q', q)
   params.set('only_active', onlyActive ? 'true' : 'false')
   params.set('relevant_only', relevantOnly ? 'true' : 'false')
+  if (publishedFrom) params.set('published_from', publishedFrom)
+  if (publishedTo) params.set('published_to', publishedTo)
   params.set('sort', sort)
   params.set('page', page)
   params.set('page_size', pageSize)

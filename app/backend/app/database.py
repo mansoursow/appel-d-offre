@@ -29,6 +29,7 @@ def run_lightweight_migrations():
     expected_columns = {
         "tenders": {
             "deadline_iso": "VARCHAR(10)",
+            "published_iso": "VARCHAR(10)",
             "is_relevant": "BOOLEAN NOT NULL DEFAULT 1",
         },
         "users": {

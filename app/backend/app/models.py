@@ -37,6 +37,11 @@ class Tender(Base):
     published_date = Column(String(30), nullable=True)  # texte tel que trouve sur la source
     deadline_date = Column(String(30), nullable=True)   # texte tel que trouve sur la source
 
+    # Date de publication normalisee "YYYY-MM-DD", calculee a partir de
+    # published_date (les sources ecrivent "07-Jul-26", "12 juillet 2026"...).
+    # Sert au filtre par periode de la veille (semaine, mois, semestre).
+    published_iso = Column(String(10), nullable=True, index=True)
+
     # Date limite normalisee au format ISO "YYYY-MM-DD", calculee automatiquement
     # a partir de deadline_date (voir scraper_service.py). Sert uniquement au
     # filtrage "offres encore en cours" ; peut etre NULL si la date n'a pas pu

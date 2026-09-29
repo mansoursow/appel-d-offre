@@ -9,7 +9,7 @@ from fastapi import FastAPI, Depends, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from . import config, notifications, price_service, scraper_service
@@ -30,6 +30,7 @@ with SessionLocal() as _session:
     seed_default_users(_session)
     scraper_service.purge_obsolete_tenders(_session)
     scraper_service.purge_relay_source_runs(_session)
+    scraper_service.backfill_published_iso(_session)
     # Recalcule la pertinence metier de tous les avis deja en base, pour que le
     # filtre "avis lies a notre activite" reflete toujours le profil courant.
     scraper_service.reclassify_relevance(_session)
@@ -120,6 +121,15 @@ def list_tenders(
         description="Si vrai (defaut), n'affiche que les avis lies a l'activite du "
                     "cabinet (audit / conseil / etudes...). Mettre a false pour tout voir.",
     ),
+    published_from: Optional[str] = Query(
+        None,
+        description="Ne garder que les avis publies a partir de cette date (AAAA-MM-JJ). "
+                    "Les avis sans date de publication lisible sont compares a leur date "
+                    "de collecte, pour ne pas disparaitre du filtre.",
+    ),
+    published_to: Optional[str] = Query(
+        None, description="Ne garder que les avis publies jusqu'a cette date (AAAA-MM-JJ).",
+    ),
     sort: str = Query(
         "deadline",
         description="deadline (echeance la plus proche d'abord, defaut) | "
@@ -142,6 +152,16 @@ def list_tenders(
     if q:
         like = f"%{q}%"
         query = query.filter(or_(Tender.title.ilike(like), Tender.entity.ilike(like)))
+    # Periode de publication. published_iso est renseigne pour la plupart des
+    # avis ; pour les autres on se rabat sur la date de collecte (scraped_at),
+    # sinon un filtre "ce mois-ci" les ferait tous disparaitre.
+    if published_from or published_to:
+        published_day = func.coalesce(Tender.published_iso, func.date(Tender.scraped_at))
+        if published_from:
+            query = query.filter(published_day >= published_from)
+        if published_to:
+            query = query.filter(published_day <= published_to)
+
     if only_active:
         today_iso = date.today().isoformat()
         # On garde une offre si sa date limite est inconnue (prudence : on ne

@@ -16,6 +16,7 @@ class TenderOut(BaseModel):
     country: Optional[str] = None
     zone: str
     published_date: Optional[str] = None
+    published_iso: Optional[str] = None
     deadline_date: Optional[str] = None
     deadline_iso: Optional[str] = None
     url: Optional[str] = None

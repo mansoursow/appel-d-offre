@@ -8,6 +8,11 @@ import DecisionModal from './DecisionModal.jsx'
 export default function VeillePage({ user, onSelectionsChanged }) {
   const [senegalTenders, setSenegalTenders] = useState([])
   const [uemoaTenders, setUemoaTenders] = useState([])
+  // Quand un site précis est choisi, on n'affiche qu'une liste (toutes zones
+  // confondues) : sinon les avis internationaux d'un bailleur resteraient
+  // invisibles, les colonnes ne couvrant que le Sénégal et l'UEMOA.
+  const [sourceTenders, setSourceTenders] = useState([])
+  const [sources, setSources] = useState([])
   const [selections, setSelections] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -23,28 +28,58 @@ export default function VeillePage({ user, onSelectionsChanged }) {
   // defaut : il bascule dans l'onglet Dossiers. On peut le reafficher.
   const [hideDecided, setHideDecided] = useState(true)
   const [relevantOnly, setRelevantOnly] = useState(true)
+  const [sourceId, setSourceId] = useState('')
+  const [period, setPeriod] = useState('')
 
   const canSelect = ['selectionneur', 'superviseur', 'admin'].includes(user.role)
+
+  /** Début de la période choisie, au format AAAA-MM-JJ (vide = pas de filtre). */
+  const publishedFrom = useMemo(() => {
+    if (!period) return undefined
+    const debut = new Date()
+    debut.setDate(debut.getDate() - Number(period))
+    return debut.toISOString().slice(0, 10)
+  }, [period])
+
+  useEffect(() => {
+    api.fetchSources()
+      .then((list) => setSources(
+        list.filter((s) => s.tender_count > 0).sort((a, b) => a.name.localeCompare(b.name)),
+      ))
+      .catch(() => setSources([]))
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = { category: category || undefined, q: q || undefined, onlyActive: hideExpired, relevantOnly, sort, pageSize: 100 }
-      const [senegal, uemoa, sels] = await Promise.all([
-        api.fetchTenders({ ...params, zone: 'senegal' }),
-        api.fetchTenders({ ...params, zone: 'uemoa' }),
-        api.fetchSelections(),
-      ])
-      setSenegalTenders(senegal.items)
-      setUemoaTenders(uemoa.items)
-      setSelections(sels)
+      const params = {
+        category: category || undefined, q: q || undefined, onlyActive: hideExpired,
+        relevantOnly, publishedFrom, sort, pageSize: 100,
+      }
+      if (sourceId) {
+        const [avis, sels] = await Promise.all([
+          api.fetchTenders({ ...params, sourceId, pageSize: 200 }),
+          api.fetchSelections(),
+        ])
+        setSourceTenders(avis.items)
+        setSelections(sels)
+      } else {
+        const [senegal, uemoa, sels] = await Promise.all([
+          api.fetchTenders({ ...params, zone: 'senegal' }),
+          api.fetchTenders({ ...params, zone: 'uemoa' }),
+          api.fetchSelections(),
+        ])
+        setSenegalTenders(senegal.items)
+        setUemoaTenders(uemoa.items)
+        setSelections(sels)
+      }
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [q, category, hideExpired, relevantOnly, sort])
+  }, [q, category, hideExpired, relevantOnly, sort, sourceId, publishedFrom])
 
   useEffect(() => { load() }, [load])
 
@@ -108,6 +143,8 @@ export default function VeillePage({ user, onSelectionsChanged }) {
       <Toolbar
         q={q} onQChange={setQ}
         category={category} onCategoryChange={setCategory}
+        sources={sources} sourceId={sourceId} onSourceIdChange={setSourceId}
+        period={period} onPeriodChange={setPeriod}
         sort={sort} onSortChange={setSort}
         hideExpired={hideExpired} onHideExpiredChange={setHideExpired}
         hideDecided={hideDecided} onHideDecidedChange={setHideDecided}
@@ -125,23 +162,36 @@ export default function VeillePage({ user, onSelectionsChanged }) {
         </div>
       )}
 
-      <main className="columns">
-        <Column
-          title="Sénégal"
-          tenders={visible(senegalTenders)}
-          loading={loading}
-          selectionsByTender={selectionsByTender}
-          canSelect={canSelect}
-          onDecide={handleDecide}
-        />
-        <Column
-          title="Sous-région (UEMOA)"
-          tenders={visible(uemoaTenders)}
-          loading={loading}
-          selectionsByTender={selectionsByTender}
-          canSelect={canSelect}
-          onDecide={handleDecide}
-        />
+      <main className={`columns${sourceId ? ' columns-single' : ''}`}>
+        {sourceId ? (
+          <Column
+            title={sources.find((s) => s.id === sourceId)?.name || 'Site choisi'}
+            tenders={visible(sourceTenders)}
+            loading={loading}
+            selectionsByTender={selectionsByTender}
+            canSelect={canSelect}
+            onDecide={handleDecide}
+          />
+        ) : (
+          <>
+            <Column
+              title="Sénégal"
+              tenders={visible(senegalTenders)}
+              loading={loading}
+              selectionsByTender={selectionsByTender}
+              canSelect={canSelect}
+              onDecide={handleDecide}
+            />
+            <Column
+              title="Sous-région (UEMOA)"
+              tenders={visible(uemoaTenders)}
+              loading={loading}
+              selectionsByTender={selectionsByTender}
+              canSelect={canSelect}
+              onDecide={handleDecide}
+            />
+          </>
+        )}
       </main>
 
       {pending && (
