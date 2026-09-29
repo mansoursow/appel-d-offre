@@ -198,6 +198,14 @@ def purge_obsolete_tenders(db: Session) -> int:
     decision a deja ete prise est conserve pour ne pas casser le dossier."""
     conditions = [Tender.dedupe_key.like(p) for p in OBSOLETE_DEDUPE_KEY_PATTERNS]
     conditions.append(Tender.dedupe_key.in_(OBSOLETE_DEDUPE_KEYS))
+    # marchespublics.sn : les avis captes sur la page d'accueil (cle
+    # "marchespublics_sn|<key>") sont desormais repris par la recherche
+    # avancee, avec une cle "marchespublics_sn|m<idmarket>". Sans ce menage
+    # ils resteraient en double, avec une date limite erronee.
+    conditions.append(
+        (Tender.source_id == "marchespublics_sn")
+        & ~Tender.dedupe_key.like("marchespublics_sn|m%")
+    )
     referenced = db.query(Selection.tender_id).filter(Selection.tender_id.isnot(None))
     removed = (
         db.query(Tender)
