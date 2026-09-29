@@ -142,6 +142,8 @@ def sources_health(db: Session = Depends(get_db), current: User = Depends(admin_
         relais = source.get("status") == "relais_local"
         if not has_scraper and not relais:
             health = "sans_scraper"
+        elif relais and run is None:
+            health = "relais_attente"
         elif run is None:
             # Avis collectes avant la mise en place de ce suivi : on s'en tient a la base.
             health = "ok" if total else "jamais"

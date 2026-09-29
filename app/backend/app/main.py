@@ -29,6 +29,7 @@ run_lightweight_migrations()
 with SessionLocal() as _session:
     seed_default_users(_session)
     scraper_service.purge_obsolete_tenders(_session)
+    scraper_service.purge_relay_source_runs(_session)
     # Recalcule la pertinence metier de tous les avis deja en base, pour que le
     # filtre "avis lies a notre activite" reflete toujours le profil courant.
     scraper_service.reclassify_relevance(_session)

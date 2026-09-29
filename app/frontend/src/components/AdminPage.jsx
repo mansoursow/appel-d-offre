@@ -49,6 +49,7 @@ const HEALTH = {
   vide: { label: 'Aucun avis trouvé', className: 'badge-warning' },
   erreur: { label: 'En erreur', className: 'badge-expired' },
   jamais: { label: 'Jamais collecté', className: 'badge-outline' },
+  relais_attente: { label: 'En attente du relais local', className: 'badge-warning' },
   sans_scraper: { label: 'Non branché', className: 'badge-rejete' },
 }
 
@@ -451,6 +452,12 @@ function SourcesPanel() {
                     {source.health === 'erreur' && source.last_error && (
                       <div className="muted" style={{ maxWidth: 260, marginTop: 4 }} title={source.last_error}>
                         {source.last_error.length > 120 ? `${source.last_error.slice(0, 120)}…` : source.last_error}
+                      </div>
+                    )}
+                    {source.collecte === 'relais_local' && (
+                      <div className="muted" style={{ maxWidth: 260, marginTop: 4 }}>
+                        Ce site n'accepte que les connexions venant du Sénégal : la collecte est
+                        faite par le poste de Dakar, pas par le serveur — d'où l'absence de bouton.
                       </div>
                     )}
                     {source.health === 'vide' && source.last_success_at && (

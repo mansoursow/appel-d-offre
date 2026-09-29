@@ -206,6 +206,23 @@ def purge_obsolete_tenders(db: Session) -> int:
     return removed
 
 
+def purge_relay_source_runs(db: Session) -> int:
+    """Efface la trace des collectes ratees faites par le SERVEUR sur une source
+    desormais confiee au relais local : sans cela la page Sources afficherait
+    encore "En erreur" alors que le serveur n'a plus a interroger ce site."""
+    relay_ids = [s["id"] for s in config.SOURCES if s.get("status") == "relais_local"]
+    if not relay_ids:
+        return 0
+    removed = (
+        db.query(SourceRun)
+        .filter(SourceRun.source_id.in_(relay_ids), SourceRun.last_status != "ok")
+        .delete(synchronize_session=False)
+    )
+    if removed:
+        db.commit()
+    return removed
+
+
 def reclassify_relevance(db: Session) -> int:
     """Recalcule le drapeau `is_relevant` de tous les avis deja en base.
 
