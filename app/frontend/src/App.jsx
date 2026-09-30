@@ -5,6 +5,7 @@ import ChangePasswordModal from './components/ChangePasswordModal.jsx'
 import VeillePage from './components/VeillePage.jsx'
 import JournauxPage from './components/JournauxPage.jsx'
 import DossiersPage from './components/DossiersPage.jsx'
+import PlansPage from './components/PlansPage.jsx'
 import PricesPage from './components/PricesPage.jsx'
 import AdminPage from './components/AdminPage.jsx'
 import { ADMIN_ROLES } from './utils.js'
@@ -24,6 +25,7 @@ const TABS = [
   { key: 'veille', label: 'Veille en ligne', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'journaux', label: 'Journaux papier', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'dossiers', label: 'Dossiers', roles: ['admin', 'selectionneur', 'superviseur', 'monteur'] },
+  { key: 'plans', label: 'Plans de passation', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'prix', label: 'Historique des prix', roles: ['admin', 'assistante', 'selectionneur', 'superviseur', 'monteur'] },
   { key: 'admin', label: 'Administration', roles: ADMIN_ROLES },
 ]
@@ -153,6 +155,7 @@ export default function App() {
         {tab === 'veille' && <VeillePage user={user} onSelectionsChanged={loadDashboard} />}
         {tab === 'journaux' && <JournauxPage user={user} onChanged={loadDashboard} />}
         {tab === 'dossiers' && <DossiersPage user={user} onChanged={loadDashboard} />}
+        {tab === 'plans' && <PlansPage />}
         {tab === 'prix' && <PricesPage user={user} />}
         {tab === 'admin' && <AdminPage dashboard={dashboard} onChanged={loadDashboard} />}
 

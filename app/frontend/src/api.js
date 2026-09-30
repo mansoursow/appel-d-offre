@@ -120,6 +120,31 @@ export function fetchTenders({ zone, category, sourceId, q, onlyActive = true, r
   return request(`/api/tenders?${params.toString()}`)
 }
 
+/** Plans de passation : ce que les entités publiques prévoient de lancer. */
+export function fetchPlans({ annee, typeAutorite, autorite, typeMarche, q, relevantOnly = true, aVenir = true, from, to, sort = 'lancement', page = 1, pageSize = 50 } = {}) {
+  const params = new URLSearchParams()
+  if (annee) params.set('annee', annee)
+  if (typeAutorite) params.set('type_autorite', typeAutorite)
+  if (autorite) params.set('autorite', autorite)
+  if (typeMarche) params.set('type_marche', typeMarche)
+  if (q) params.set('q', q)
+  params.set('relevant_only', relevantOnly ? 'true' : 'false')
+  params.set('a_venir', aVenir ? 'true' : 'false')
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  params.set('sort', sort)
+  params.set('page', page)
+  params.set('page_size', pageSize)
+  return request(`/api/plans?${params.toString()}`)
+}
+
+export function fetchPlansFacets({ annee, relevantOnly = true } = {}) {
+  const params = new URLSearchParams()
+  if (annee) params.set('annee', annee)
+  params.set('relevant_only', relevantOnly ? 'true' : 'false')
+  return request(`/api/plans/facets?${params.toString()}`)
+}
+
 export function fetchSources() {
   return request('/api/sources')
 }

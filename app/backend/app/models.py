@@ -64,6 +64,37 @@ class Tender(Base):
     )
 
 
+class ProcurementPlan(Base):
+    """Une ligne de plan de passation : ce qu'une autorite contractante
+    prevoit de lancer dans l'annee (portail marchespublics.sn).
+
+    C'est de l'anticipation : l'avis n'est pas encore publie, mais on connait
+    l'objet, le mode de passation et la date de lancement prevue.
+    """
+
+    __tablename__ = "procurement_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    dedupe_key = Column(String(300), unique=True, index=True, nullable=False)
+
+    reference = Column(String(120), nullable=True)
+    objet = Column(Text, nullable=False)
+    type_marche = Column(String(120), nullable=True, index=True)   # Prestations intellectuelles, Travaux...
+    mode_passation = Column(String(200), nullable=True)            # Appel d'offres ouvert, AMI...
+
+    date_lancement = Column(String(10), nullable=True, index=True)     # AAAA-MM-JJ
+    date_attribution = Column(String(10), nullable=True)               # AAAA-MM-JJ
+
+    autorite = Column(String(250), nullable=False, index=True)     # ministere, commune, agence...
+    type_autorite = Column(String(120), nullable=True, index=True)  # Etat, Collectivites locales...
+    annee = Column(Integer, nullable=False, index=True)
+
+    url = Column(Text, nullable=True)
+    # Meme filtre metier que la veille (audit / conseil / etudes...).
+    is_relevant = Column(Boolean, nullable=False, default=True, server_default="1", index=True)
+    collected_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class SourceRun(Base):
     """Resultat de la derniere collecte d'une source (une ligne par source).
 
