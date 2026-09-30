@@ -10,6 +10,17 @@ const HORIZONS = [
   { value: '6', label: 'Lancement dans 6 mois' },
 ]
 
+const MOIS = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+]
+
+/** Dernier jour d'un mois (mois : 1 à 12), au format AAAA-MM-JJ. */
+function finDeMois(annee, mois) {
+  const dernier = new Date(Number(annee), Number(mois), 0).getDate()
+  return `${annee}-${String(mois).padStart(2, '0')}-${String(dernier).padStart(2, '0')}`
+}
+
 const PAGE_SIZE = 50
 
 /**
@@ -28,6 +39,12 @@ export default function PlansPage() {
   const [autorite, setAutorite] = useState('')
   const [typeMarche, setTypeMarche] = useState('')
   const [horizon, setHorizon] = useState('')
+  // Période explicite : de tel mois à tel mois, ou dates précises. Elle
+  // l'emporte sur l'horizon et ne tient pas compte de la date du jour.
+  const [moisDebut, setMoisDebut] = useState('')
+  const [moisFin, setMoisFin] = useState('')
+  const [dateDebut, setDateDebut] = useState('')
+  const [dateFin, setDateFin] = useState('')
   const [q, setQ] = useState('')
   const [relevantOnly, setRelevantOnly] = useState(true)
   const [aVenir, setAVenir] = useState(true)
@@ -42,12 +59,27 @@ export default function PlansPage() {
       .catch((e) => setError(e.message))
   }, [annee, relevantOnly])
 
+  const from = useMemo(() => {
+    if (dateDebut) return dateDebut
+    if (moisDebut && annee) return `${annee}-${String(moisDebut).padStart(2, '0')}-01`
+    return undefined
+  }, [dateDebut, moisDebut, annee])
+
   const to = useMemo(() => {
-    if (!horizon) return undefined
-    const fin = new Date()
-    fin.setMonth(fin.getMonth() + Number(horizon))
-    return fin.toISOString().slice(0, 10)
-  }, [horizon])
+    if (dateFin) return dateFin
+    if (moisFin && annee) return finDeMois(annee, moisFin)
+    if (horizon) {
+      const fin = new Date()
+      fin.setMonth(fin.getMonth() + Number(horizon))
+      return fin.toISOString().slice(0, 10)
+    }
+    return undefined
+  }, [dateFin, moisFin, annee, horizon])
+
+  // Une période choisie à la main se lit telle quelle : on n'y superpose pas
+  // le filtre « à venir », sinon janvier à juin ne montrerait rien.
+  const periodeChoisie = Boolean(dateDebut || dateFin || moisDebut || moisFin)
+  const aVenirEffectif = periodeChoisie ? false : aVenir
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -60,7 +92,8 @@ export default function PlansPage() {
         typeMarche: typeMarche || undefined,
         q: q || undefined,
         relevantOnly,
-        aVenir,
+        aVenir: aVenirEffectif,
+        from,
         to,
         page,
         pageSize: PAGE_SIZE,
@@ -70,12 +103,14 @@ export default function PlansPage() {
     } finally {
       setLoading(false)
     }
-  }, [annee, typeAutorite, autorite, typeMarche, q, relevantOnly, aVenir, to, page])
+  }, [annee, typeAutorite, autorite, typeMarche, q, relevantOnly, aVenirEffectif, from, to, page])
 
   useEffect(() => { load() }, [load])
 
   // Tout changement de filtre ramène à la première page.
-  useEffect(() => { setPage(1) }, [annee, typeAutorite, autorite, typeMarche, q, relevantOnly, aVenir, horizon])
+  useEffect(() => {
+    setPage(1)
+  }, [annee, typeAutorite, autorite, typeMarche, q, relevantOnly, aVenir, horizon, moisDebut, moisFin, dateDebut, dateFin])
 
   const total = data?.total ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -137,11 +172,44 @@ export default function PlansPage() {
           </select>
 
           <select className="select" value={horizon} onChange={(e) => setHorizon(e.target.value)}
-                  aria-label="Horizon de lancement">
+                  aria-label="Horizon de lancement" disabled={periodeChoisie}
+                  title={periodeChoisie ? 'Une période précise est déjà choisie' : "À partir d'aujourd'hui"}>
             {HORIZONS.map((h) => (
               <option key={h.value} value={h.value}>{h.label}</option>
             ))}
           </select>
+
+          <select className="select" value={moisDebut} onChange={(e) => setMoisDebut(e.target.value)}
+                  aria-label="Mois de début" title="Lancements prévus à partir de ce mois">
+            <option value="">Mois de début</option>
+            {MOIS.map((m, i) => (
+              <option key={m} value={i + 1}>De {m.toLowerCase()}</option>
+            ))}
+          </select>
+
+          <select className="select" value={moisFin} onChange={(e) => setMoisFin(e.target.value)}
+                  aria-label="Mois de fin" title="Lancements prévus jusqu'à la fin de ce mois">
+            <option value="">Mois de fin</option>
+            {MOIS.map((m, i) => (
+              <option key={m} value={i + 1}>À {m.toLowerCase()}</option>
+            ))}
+          </select>
+
+          <label className="row" style={{ gap: 6 }} title="Dates précises de lancement prévu">
+            <span className="muted">Du</span>
+            <input type="date" className="input" style={{ width: 'auto' }}
+                   value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
+            <span className="muted">au</span>
+            <input type="date" className="input" style={{ width: 'auto' }}
+                   value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
+          </label>
+
+          {periodeChoisie && (
+            <button className="btn btn-sm btn-outline"
+                    onClick={() => { setMoisDebut(''); setMoisFin(''); setDateDebut(''); setDateFin('') }}>
+              Effacer la période
+            </button>
+          )}
 
           <label className="checkbox-label"
                  title="Ne garder que les marchés relevant de l'activité du cabinet (audit, conseil, études, formation…)">
@@ -149,8 +217,12 @@ export default function PlansPage() {
             Uniquement liés à notre activité
           </label>
 
-          <label className="checkbox-label" title="Masquer les lancements dont la date prévue est passée">
-            <input type="checkbox" checked={aVenir} onChange={(e) => setAVenir(e.target.checked)} />
+          <label className="checkbox-label"
+                 title={periodeChoisie
+                   ? 'Sans effet : la période choisie est prise telle quelle'
+                   : 'Masquer les lancements dont la date prévue est passée'}>
+            <input type="checkbox" checked={aVenirEffectif} disabled={periodeChoisie}
+                   onChange={(e) => setAVenir(e.target.checked)} />
             Lancements à venir seulement
           </label>
         </div>
