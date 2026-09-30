@@ -35,19 +35,21 @@ def is_configured() -> bool:
     return bool(config.EMAIL_FROM and (config.BREVO_API_KEY or config.RESEND_API_KEY or config.SMTP_HOST))
 
 
-def send_email(to: list[str], subject: str, text_body: str, html_body: str) -> None:
+def send_email(to: list[str], subject: str, text_body: str, html_body: str,
+               cc: list[str] | None = None) -> None:
     """Envoie un e-mail. Leve une exception en cas d'echec."""
     if not is_configured():
         raise RuntimeError("aucun service d'envoi configuré")
+    cc = [a for a in (cc or []) if a not in to]
     if config.BREVO_API_KEY:
-        _send_brevo(to, subject, text_body, html_body)
+        _send_brevo(to, subject, text_body, html_body, cc)
     elif config.RESEND_API_KEY:
-        _send_resend(to, subject, text_body, html_body)
+        _send_resend(to, subject, text_body, html_body, cc)
     else:
-        _send_smtp(to, subject, text_body, html_body)
+        _send_smtp(to, subject, text_body, html_body, cc)
 
 
-def _send_brevo(to, subject, text_body, html_body):
+def _send_brevo(to, subject, text_body, html_body, cc=None):
     name, address = parseaddr(config.EMAIL_FROM)
     resp = requests.post(
         "https://api.brevo.com/v3/smtp/email",
@@ -55,6 +57,7 @@ def _send_brevo(to, subject, text_body, html_body):
         json={
             "sender": {"email": address, **({"name": name} if name else {})},
             "to": [{"email": addr} for addr in to],
+            **({"cc": [{"email": addr} for addr in cc]} if cc else {}),
             "subject": subject,
             "textContent": text_body,
             "htmlContent": html_body,
@@ -65,21 +68,24 @@ def _send_brevo(to, subject, text_body, html_body):
         raise RuntimeError(f"Brevo {resp.status_code} : {resp.text[:200]}")
 
 
-def _send_resend(to, subject, text_body, html_body):
+def _send_resend(to, subject, text_body, html_body, cc=None):
     resp = requests.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {config.RESEND_API_KEY}"},
-        json={"from": config.EMAIL_FROM, "to": to, "subject": subject, "text": text_body, "html": html_body},
+        json={"from": config.EMAIL_FROM, "to": to, "subject": subject,
+              "text": text_body, "html": html_body, **({"cc": cc} if cc else {})},
         timeout=20,
     )
     if resp.status_code >= 400:
         raise RuntimeError(f"Resend {resp.status_code} : {resp.text[:200]}")
 
 
-def _send_smtp(to, subject, text_body, html_body):
+def _send_smtp(to, subject, text_body, html_body, cc=None):
     msg = EmailMessage()
     msg["From"] = config.EMAIL_FROM
     msg["To"] = ", ".join(to)
+    if cc:
+        msg["Cc"] = ", ".join(cc)
     msg["Subject"] = subject
     msg.set_content(text_body)
     msg.add_alternative(html_body, subtype="html")
@@ -108,24 +114,36 @@ def notify_dossier_assigned(selection_id: int) -> None:
             return
 
         if selection.assigned_to is not None:
-            recipients = [selection.assigned_to] if selection.assigned_to.is_active else []
+            responsables = [selection.assigned_to] if selection.assigned_to.is_active else []
         else:
-            recipients = db.query(User).filter(User.role == "monteur", User.is_active.is_(True)).all()
-        addresses = sorted({u.email for u in recipients if u.email})
+            responsables = db.query(User).filter(User.role == "monteur", User.is_active.is_(True)).all()
+        destinataires = sorted({u.email for u in responsables if u.email})
 
-        if not addresses:
-            names = ", ".join(u.full_name or u.username for u in recipients) or "aucun compte montage actif"
-            _log(db, selection, "notification_non_envoyee", f"aucune adresse e-mail renseignee ({names})")
+        # Toute l'equipe suit les affectations : les autres comptes actifs
+        # ayant une adresse sont mis en copie.
+        ids_responsables = {u.id for u in responsables}
+        copies = sorted({
+            u.email for u in db.query(User).filter(User.is_active.is_(True)).all()
+            if u.email and u.id not in ids_responsables
+        } - set(destinataires))
+
+        if not destinataires and not copies:
+            noms = ", ".join(u.full_name or u.username for u in responsables) or "aucun compte montage actif"
+            _log(db, selection, "notification_non_envoyee", f"aucune adresse e-mail renseignee ({noms})")
             return
+        if not destinataires:
+            # Personne de joignable au montage : l'equipe est prevenue quand meme.
+            destinataires, copies = copies, []
 
         subject, text_body, html_body = _dossier_message(selection)
         try:
-            send_email(addresses, subject, text_body, html_body)
+            send_email(destinataires, subject, text_body, html_body, cc=copies)
         except Exception as exc:
             logger.error("Notification e-mail du dossier %s en echec : %s", selection.id, exc)
-            _log(db, selection, "notification_echec", f"{', '.join(addresses)} : {str(exc)[:200]}")
+            _log(db, selection, "notification_echec", f"{', '.join(destinataires)} : {str(exc)[:200]}")
             return
-        _log(db, selection, "notification_envoyee", ", ".join(addresses))
+        detail = ", ".join(destinataires) + (f" (copie : {', '.join(copies)})" if copies else "")
+        _log(db, selection, "notification_envoyee", detail)
 
 
 def _log(db, selection: Selection, action: str, detail: str) -> None:
